@@ -1,4 +1,4 @@
-package com.uhc.workout.tracker
+package com.uhc.workouttracker
 
 class Greeting {
     private val platform = getPlatform()

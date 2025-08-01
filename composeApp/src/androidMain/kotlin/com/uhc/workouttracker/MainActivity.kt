@@ -1,4 +1,4 @@
-package com.uhc.workout.tracker
+package com.uhc.workouttracker
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

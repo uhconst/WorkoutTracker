@@ -1,4 +1,4 @@
-package com.uhc.workout.tracker
+package com.uhc.workouttracker
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image

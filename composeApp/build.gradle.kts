@@ -49,11 +49,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.uhc.workout.tracker"
+    namespace = "com.uhc.workouttracker"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.uhc.workout.tracker"
+        applicationId = "com.uhc.workouttracker"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

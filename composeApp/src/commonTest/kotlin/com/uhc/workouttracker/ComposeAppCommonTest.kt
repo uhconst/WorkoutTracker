@@ -1,4 +1,4 @@
-package com.uhc.workout.tracker
+package com.uhc.workouttracker
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
