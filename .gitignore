@@ -32,3 +32,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+/iosApp/iosApp.xcodeproj/project.xcworkspace/xcuserdata/uhconst.xcuserdatad/UserInterfaceState.xcuserstate
+/.kotlin/metadata/kotlinTransformedMetadataLibraries/
+and
