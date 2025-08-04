@@ -6,7 +6,9 @@ fun initKoin() {
     startKoin {
         modules(
             dataModule,
+            domainModule,
             viewModelModule,
+            supabaseModule,
         )
     }
 }

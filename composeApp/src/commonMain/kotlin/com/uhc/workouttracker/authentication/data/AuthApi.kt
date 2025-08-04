@@ -31,17 +31,17 @@ sealed interface AuthApi {
 }
 
 internal class AuthApiImpl(
-//    private val client: SupabaseClient
+    private val client: SupabaseClient
 ) : AuthApi {
 
-    private val client by lazy {
+/*    private val client by lazy {
         createSupabaseClient(
             "https://evblichpfnyvvboqhsht.supabase.co",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2YmxpY2hwZm55dnZib3Foc2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4MzYzNDUsImV4cCI6MjA0OTQxMjM0NX0.9hGBigU1xpJnxH3HdAs3-0I8oq_83P7MfArRL73T62I"
         ) {
             install(Auth)
         }
-    }
+    }*/
 
     private val auth by lazy { client.auth }
 
