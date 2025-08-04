@@ -1,29 +1,23 @@
 package com.uhc.workouttracker
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.uhc.workouttracker.navigation.TicketMasterNavHost
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-import workouttracker.composeapp.generated.resources.Res
-import workouttracker.composeapp.generated.resources.compose_multiplatform
-
 @Composable
-@Preview
+@Preview //todo delete
 fun App() {
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
+        Surface {
+            val navController: NavHostController = rememberNavController()
+            TicketMasterNavHost(navController = navController)
+        }
+
+/*        var showContent by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primaryContainer)
@@ -44,6 +38,31 @@ fun App() {
                     Text("Compose: $greeting")
                 }
             }
-        }
+        }*/
     }
+
+/*    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = currentRoute == NavRoute.Home.value,
+                    onClick = { navController.navigate(NavRoute.Home.value) },
+                    label = { Text(stringResource(R.string.home_bottom_nav)) },
+                    icon = { Icon(Icons.Default.Home, contentDescription = null) }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == NavRoute.About.value,
+                    onClick = { navController.navigate(NavRoute.About.value) },
+                    label = { Text(stringResource(R.string.about_bottom_nav)) },
+                    icon = { Icon(Icons.Default.AccountBox, contentDescription = null) }
+                )
+            }
+        }
+    ) { innerPadding ->
+        WorkoutTrackerNavHost(Modifier.padding(innerPadding), navController)
+    }*/
 }
