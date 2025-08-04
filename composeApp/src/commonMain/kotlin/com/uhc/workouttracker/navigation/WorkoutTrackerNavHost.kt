@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.uhc.workouttracker.authentication.presentation.LoginScreen
-import com.uhc.workouttracker.workout.presentation.WorkoutListScreen
+import com.uhc.workouttracker.workout.presentation.ExerciseListScreen
 
 @Composable
 fun TicketMasterNavHost(
@@ -22,7 +22,7 @@ fun TicketMasterNavHost(
             LoginScreen(navController)
         }
         composable(route = NavRoute.WorkoutListDestination.value) {
-            WorkoutListScreen()
+            ExerciseListScreen()
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.uhc.workouttracker.workout.presentation
+package com.uhc.workouttracker.muscle.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
-class WorkoutListViewModel(
+class MuscleGroupsViewModel(
     getMuscleGroupsUseCase: GetMuscleGroupsUseCase
 ) : ViewModel() {
     val muscles: StateFlow<List<MuscleGroup>> = getMuscleGroupsUseCase()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
 }

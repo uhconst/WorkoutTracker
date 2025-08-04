@@ -15,31 +15,29 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.uhc.workouttracker.muscle.data.MuscleGroup
+import com.uhc.workouttracker.workout.data.Exercises
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun WorkoutListScreen() {
-    Text("WIP Workout List2 Screen WIP")
+fun ExerciseListScreen() {
+    val viewModel: ExerciseListViewModel = koinViewModel()
 
-    val viewModel: WorkoutListViewModel = koinViewModel()
+    val exercises by viewModel.exercises.collectAsState()
 
-    val muscles by viewModel.muscles.collectAsState()
-
-    WorkoutListLayout(muscleGroups = muscles)
+    ExerciseListLayout(exercises = exercises)
 }
 
 @Composable
-private fun WorkoutListLayout(muscleGroups: List<MuscleGroup> = emptyList()) {
+private fun ExerciseListLayout(exercises: List<Exercises> = emptyList()) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxSize()
     ) {
         items(
-            items = muscleGroups,
-            key = { it.hashCode() } //todo ID
+            items = exercises,
+            key = { it.id }
         ) { muscle ->
             Card(
                 modifier = Modifier
@@ -60,17 +58,17 @@ private fun WorkoutListLayout(muscleGroups: List<MuscleGroup> = emptyList()) {
 @Preview
 @Composable
 private fun WorkoutListPreview() {
-    WorkoutListLayout(
-        muscleGroups = listOf(
-            MuscleGroup(
+    ExerciseListLayout(
+        exercises = listOf(
+            Exercises(
                 id = 1,
                 name = "Biceps"
             ),
-            MuscleGroup(
+            Exercises(
                 id = 2,
                 name = "Triceps"
             ),
-            MuscleGroup(
+            Exercises(
                 id = 3,
                 name = "Chest"
             )
