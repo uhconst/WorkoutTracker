@@ -1,17 +1,17 @@
 package com.uhc.workouttracker
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.navigation.TicketMasterNavHost
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview //todo delete
 fun App() {
-    MaterialTheme {
+    WorkoutTrackerTheme {
         Surface {
             val navController: NavHostController = rememberNavController()
             TicketMasterNavHost(navController = navController)
