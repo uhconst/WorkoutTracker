@@ -1,6 +1,10 @@
 package com.uhc.workouttracker.workout.presentation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,33 +14,49 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
-import com.uhc.workouttracker.workout.data.Exercises
+import com.uhc.workouttracker.workout.data.Exercise
+import com.uhc.workouttracker.workout.data.MuscleGroupsWithExercises
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ExerciseListScreen(drawerState: DrawerState? = null) {
     val viewModel: ExerciseListViewModel = koinViewModel()
-    val exercises by viewModel.exercises.collectAsState()
-    ExerciseListLayout(exercises = exercises, drawerState = drawerState)
+//    val exercises by viewModel.exercises.collectAsState()
+    val exercisesGroupedByMuscle by viewModel.exercisesGroupedByMuscle.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchExercises()
+    }
+    ExerciseListLayout(exercisesGroupedByMuscle = exercisesGroupedByMuscle, drawerState = drawerState)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExerciseListLayout(exercises: List<Exercises> = emptyList(), drawerState: DrawerState? = null) {
+private fun ExerciseListLayout(exercisesGroupedByMuscle: List<MuscleGroupsWithExercises> = emptyList(), drawerState: DrawerState? = null) {
+    // Track expanded state for each muscle group
+    val expandedState = remember { mutableStateMapOf<Long, Boolean>() }
+    
     WorkoutTrackerAppBar(
         title = "Exercises",
         drawerState = drawerState,
@@ -49,30 +69,91 @@ private fun ExerciseListLayout(exercises: List<Exercises> = emptyList(), drawerS
                 .padding(innerPadding)
         ) {
             items(
-                items = exercises,
+                items = exercisesGroupedByMuscle,
                 key = { it.id }
-            ) { exercise ->
+            ) { muscleGroup ->
+                val isExpanded = expandedState[muscleGroup.id] ?: false
+                val rotationState by animateFloatAsState(
+                    targetValue = if (isExpanded) 180f else 0f
+                )
+                
                 Card(
                     modifier = Modifier
                         .animateItem()
                         .fillMaxWidth()
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
-                            .height(IntrinsicSize.Min),
-                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            style = MaterialTheme.typography.titleMedium,
-                            text = exercise.name
-                        )
+                        // Muscle group header (always visible)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { 
+                                    expandedState[muscleGroup.id] = !isExpanded
+                                }
+                                .padding(16.dp)
+                                .height(IntrinsicSize.Min),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                                text = muscleGroup.muscleName
+                            )
+                            
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                modifier = Modifier.rotate(rotationState)
+                            )
+                        }
+                        
+                        // Exercises list (visible only when expanded)
+                        AnimatedVisibility(visible = isExpanded) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                            ) {
+                                if (muscleGroup.exercises.isNullOrEmpty()) {
+                                    Text(
+                                        text = "No exercises available for this muscle group",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                } else {
+                                    muscleGroup.exercises.forEach { exercise ->
+                                        ExerciseItem(exercise = exercise)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ExerciseItem(exercise: Exercise) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = exercise.name,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = exercise.weightLogs?.last()?.weight.toString() + " kg",
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 
@@ -81,18 +162,37 @@ private fun ExerciseListLayout(exercises: List<Exercises> = emptyList(), drawerS
 private fun WorkoutListPreview() {
     WorkoutTrackerTheme {
         ExerciseListLayout(
-            exercises = listOf(
-                Exercises(
+            exercisesGroupedByMuscle = listOf(
+                MuscleGroupsWithExercises(
                     id = 1,
-                    name = "Biceps"
+                    muscleName = "Biceps",
+                    exercises = listOf(
+                        Exercise(id = 1, name = "Barbell Curl"),
+                        Exercise(id = 2, name = "Dumbbell Curl"),
+                        Exercise(id = 3, name = "Hammer Curl")
+                    )
                 ),
-                Exercises(
+                MuscleGroupsWithExercises(
                     id = 2,
-                    name = "Triceps"
+                    muscleName = "Triceps",
+                    exercises = listOf(
+                        Exercise(id = 4, name = "Tricep Pushdown"),
+                        Exercise(id = 5, name = "Overhead Extension")
+                    )
                 ),
-                Exercises(
+                MuscleGroupsWithExercises(
                     id = 3,
-                    name = "Chest"
+                    muscleName = "Chest",
+                    exercises = listOf(
+                        Exercise(id = 6, name = "Bench Press"),
+                        Exercise(id = 7, name = "Incline Press"),
+                        Exercise(id = 8, name = "Chest Fly")
+                    )
+                ),
+                MuscleGroupsWithExercises(
+                    id = 4,
+                    muscleName = "Shoulders",
+                    exercises = emptyList()
                 )
             )
         )

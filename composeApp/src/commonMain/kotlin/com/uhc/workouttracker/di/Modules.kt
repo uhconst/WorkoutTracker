@@ -7,7 +7,9 @@ import com.uhc.workouttracker.muscle.domain.DeleteMuscleGroupUseCase
 import com.uhc.workouttracker.muscle.domain.GetMuscleGroupsUseCase
 import com.uhc.workouttracker.muscle.domain.SetMuscleGroupUseCase
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel
-import com.uhc.workouttracker.workout.domain.GetWorkoutsUseCase
+import com.uhc.workouttracker.workout.domain.GetExercisesUseCase
+import com.uhc.workouttracker.workout.domain.GetWeightLogsUseCase
+import com.uhc.workouttracker.workout.domain.GetWorkoutWithMusclesUseCase
 import com.uhc.workouttracker.workout.presentation.ExerciseListViewModel
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
@@ -23,7 +25,9 @@ val domainModule = module {
     factory { DeleteMuscleGroupUseCase(get()) }
     factory { GetMuscleGroupsUseCase(get()) }
     factory { SetMuscleGroupUseCase(get()) }
-    factory { GetWorkoutsUseCase(get()) }
+    factory { GetExercisesUseCase(get()) }
+    factory { GetWeightLogsUseCase(get()) }
+    factory { GetWorkoutWithMusclesUseCase(get(), get(), get()) }
 }
 
 val viewModelModule = module {
