@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class MuscleGroup(
-    val id: Long,
+    val id: Long = -1,
     val name: String
 )

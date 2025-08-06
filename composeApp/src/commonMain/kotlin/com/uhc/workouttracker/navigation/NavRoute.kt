@@ -8,4 +8,6 @@ sealed class NavRoute(val value: String) {
     data object AuthenticationDestination: NavRoute("authentication")
     @Serializable
     data object WorkoutListDestination: NavRoute("workout-list")
+    @Serializable
+    data object MuscleGroupsDestination: NavRoute("muscles-group")
 }
