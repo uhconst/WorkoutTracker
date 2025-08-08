@@ -12,13 +12,15 @@ class ExerciseListViewModel(
     private val getExercisesUseCase: GetExercisesUseCase
 ) : ViewModel() {
 
-    private val _exercisesGroupedByMuscle = MutableStateFlow<List<MuscleGroupsWithExercises>>(emptyList())
-    val exercisesGroupedByMuscle: StateFlow<List<MuscleGroupsWithExercises>> = _exercisesGroupedByMuscle
+    private val _exercisesGroupedByMuscle =
+        MutableStateFlow<List<MuscleGroupsWithExercises>>(emptyList())
+    val exercisesGroupedByMuscle: StateFlow<List<MuscleGroupsWithExercises>> =
+        _exercisesGroupedByMuscle
 
 
     fun fetchExercises() {
         viewModelScope.launch {
-            _exercisesGroupedByMuscle.value = getExercisesUseCase.invoke2()
+            _exercisesGroupedByMuscle.value = getExercisesUseCase()
         }
     }
 }
