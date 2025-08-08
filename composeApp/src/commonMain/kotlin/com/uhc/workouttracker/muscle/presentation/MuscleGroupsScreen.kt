@@ -99,7 +99,7 @@ private fun MuscleGroupsLayout(
 
     WorkoutTrackerAppBar(
         title = "Muscle Groups",
-        drawerState = drawerState,
+        drawerState = drawerState
     ) { innerPadding ->
         Column(
             modifier = Modifier

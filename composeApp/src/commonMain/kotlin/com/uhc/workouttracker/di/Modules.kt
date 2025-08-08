@@ -9,6 +9,8 @@ import com.uhc.workouttracker.muscle.domain.SetMuscleGroupUseCase
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel
 import com.uhc.workouttracker.workout.domain.GetExercisesUseCase
 import com.uhc.workouttracker.workout.domain.GetWeightLogsUseCase
+import com.uhc.workouttracker.workout.domain.SetExerciseUseCase
+import com.uhc.workouttracker.workout.presentation.AddExerciseViewModel
 import com.uhc.workouttracker.workout.presentation.ExerciseListViewModel
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
@@ -26,12 +28,14 @@ val domainModule = module {
     factory { SetMuscleGroupUseCase(get()) }
     factory { GetExercisesUseCase(get()) }
     factory { GetWeightLogsUseCase(get()) }
+    factory { SetExerciseUseCase(get()) }
 }
 
 val viewModelModule = module {
     viewModelOf(::LoginViewModel)
     viewModelOf(::ExerciseListViewModel)
     viewModelOf(::MuscleGroupsViewModel)
+    viewModelOf(::AddExerciseViewModel)
 }
 
 val supabaseModule = module {

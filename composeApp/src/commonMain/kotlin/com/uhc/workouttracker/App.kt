@@ -9,16 +9,13 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,11 +49,16 @@ fun App() {
             val drawerState = rememberDrawerState(DrawerValue.Closed)
             val scope = rememberCoroutineScope()
             var selectedItemIndex by remember { mutableStateOf(0) }
-            
+
             val navigationItems = listOf(
                 NavigationItem(
                     title = "View Workouts",
-                    icon = { Icon(Icons.Default.FitnessCenter, contentDescription = "View Workouts") },
+                    icon = {
+                        Icon(
+                            Icons.Default.FitnessCenter,
+                            contentDescription = "View Workouts"
+                        )
+                    },
                     route = NavRoute.WorkoutListDestination.value,
                     onClick = {
                         navController.navigate(NavRoute.WorkoutListDestination.value) {
@@ -66,7 +68,12 @@ fun App() {
                 ),
                 NavigationItem(
                     title = "Add Muscle Group",
-                    icon = { Icon(Icons.Default.FitnessCenter, contentDescription = "Add Muscle Group") },
+                    icon = {
+                        Icon(
+                            Icons.Default.FitnessCenter,
+                            contentDescription = "Add Muscle Group"
+                        )
+                    },
                     onClick = {
                         navController.navigate(NavRoute.MuscleGroupsDestination.value) {
                             popUpTo(NavRoute.MuscleGroupsDestination.value) { inclusive = true }
@@ -77,7 +84,9 @@ fun App() {
                     title = "Add Exercise",
                     icon = { Icon(Icons.Default.Add, contentDescription = "Add Exercise") },
                     onClick = {
-                        // Navigate to Add Exercise screen when implemented
+                        navController.navigate(NavRoute.AddExerciseDestination.value) {
+                            popUpTo(NavRoute.WorkoutListDestination.value) { inclusive = true }
+                        }
                     }
                 ),
                 NavigationItem(
@@ -98,7 +107,7 @@ fun App() {
                     }
                 )
             )
-            
+
             ModalNavigationDrawer(
                 drawerState = drawerState,
                 drawerContent = {

@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.uhc.workouttracker.authentication.presentation.LoginScreen
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsScreen
+import com.uhc.workouttracker.workout.presentation.AddExerciseScreen
 import com.uhc.workouttracker.workout.presentation.ExerciseListScreen
 
 @Composable
@@ -29,6 +30,9 @@ fun TicketMasterNavHost(
         }
         composable(route = NavRoute.MuscleGroupsDestination.value) {
             MuscleGroupsScreen(drawerState = drawerState)
+        }
+        composable(route = NavRoute.AddExerciseDestination.value) {
+            AddExerciseScreen(drawerState = drawerState, navController = navController)
         }
     }
 }
