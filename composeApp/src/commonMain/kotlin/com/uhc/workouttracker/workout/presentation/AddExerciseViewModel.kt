@@ -22,19 +22,19 @@ class AddExerciseViewModel(
 
     fun saveExercise(name: String, muscleGroupId: Long, weight: Double) {
         viewModelScope.launch {
-                val exercise = Exercise(
-                    id = 0,
-                    name = name,
-                    muscleGroupsId = muscleGroupId,
-                    weightLogs = listOf(
-                        WeightLogs(
-                            id = 0,
-                            weight = weight.toFloat()
-                        )
+            val exercise = Exercise(
+                id = 0,
+                name = name,
+                muscleGroupsId = muscleGroupId,
+                weightLogs = listOf(
+                    WeightLogs(
+                        id = 0,
+                        weight = weight.toFloat()
                     )
                 )
-                
-                setExerciseUseCase(exercise)
+            )
+
+            setExerciseUseCase(exercise)
         }
     }
 }

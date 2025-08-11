@@ -2,9 +2,9 @@ package com.uhc.workouttracker
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -98,7 +98,7 @@ fun App() {
                 ),
                 NavigationItem(
                     title = "Logout",
-                    icon = { Icon(Icons.Default.Logout, contentDescription = "Logout") },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout") },
                     route = NavRoute.AuthenticationDestination.value,
                     onClick = {
                         navController.navigate(NavRoute.AuthenticationDestination.value) {
