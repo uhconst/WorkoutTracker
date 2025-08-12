@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,6 +39,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
+import com.uhc.workouttracker.muscle.data.MuscleGroup
 import com.uhc.workouttracker.workout.data.Exercise
 import com.uhc.workouttracker.workout.data.MuscleGroupsWithExercises
 import com.uhc.workouttracker.workout.data.WeightLogs
@@ -46,14 +49,19 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ExerciseListScreen(drawerState: DrawerState? = null) {
     val viewModel: ExerciseListViewModel = koinViewModel()
-    val exercisesGroupedByMuscle by viewModel.exercisesGroupedByMuscle.collectAsState()
+    val exercisesGroupedByMuscle by viewModel.filteredExercises.collectAsState()
+    val muscles by viewModel.muscles.collectAsState()
+    val selectedMuscleIds by viewModel.selectedMuscleIds.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchExercises()
     }
-    
+
     ExerciseListLayout(
         exercisesGroupedByMuscle = exercisesGroupedByMuscle,
+        muscles = muscles,
+        selectedMuscleIds = selectedMuscleIds,
+        onMuscleSelected = viewModel::selectMuscleFilter,
         drawerState = drawerState
     )
 }
@@ -62,6 +70,9 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
 @Composable
 private fun ExerciseListLayout(
     exercisesGroupedByMuscle: List<MuscleGroupsWithExercises> = emptyList(),
+    muscles: List<MuscleGroup> = emptyList(),
+    selectedMuscleIds: Set<Long> = emptySet(),
+    onMuscleSelected: (Long?) -> Unit = {},
     drawerState: DrawerState? = null,
     expandedState: SnapshotStateMap<Long, Boolean> = remember { mutableStateMapOf() }
 ) {
@@ -69,70 +80,99 @@ private fun ExerciseListLayout(
         title = "Exercises",
         drawerState = drawerState,
     ) { innerPadding ->
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            items(
-                items = exercisesGroupedByMuscle,
-                key = { it.id }
-            ) { muscleGroup ->
-                val isExpanded = expandedState[muscleGroup.id] ?: false
-                val rotationState by animateFloatAsState(
-                    targetValue = if (isExpanded) 180f else 0f
-                )
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                // "All" filter chip
+                item {
+                    FilterChip(
+                        selected = selectedMuscleIds.isEmpty(),
+                        onClick = { onMuscleSelected(null) },
+                        label = { Text("All") }
+                    )
+                }
 
-                Card(
-                    modifier = Modifier
-                        .animateItem()
-                        .fillMaxWidth()
-                ) {
-                    Column(
+                // Muscle group filter chips
+                items(muscles) { muscle ->
+                    FilterChip(
+                        selected = muscle.id in selectedMuscleIds,
+                        onClick = { onMuscleSelected(muscle.id) },
+                        label = { Text(muscle.name) }
+                    )
+                }
+            }
+
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    items = exercisesGroupedByMuscle,
+                    key = { it.id }
+                ) { muscleGroup ->
+                    val isExpanded = expandedState[muscleGroup.id] ?: false
+                    val rotationState by animateFloatAsState(
+                        targetValue = if (isExpanded) 180f else 0f
+                    )
+
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
-                        // Muscle group header (always visible)
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    expandedState[muscleGroup.id] = !isExpanded
-                                }
-                                .padding(16.dp)
-                                .height(IntrinsicSize.Min),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleMedium,
-                                text = muscleGroup.muscleName
-                            )
-
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (isExpanded) "Collapse" else "Expand",
-                                modifier = Modifier.rotate(rotationState)
-                            )
-                        }
-
-                        // Exercises list (visible only when expanded)
-                        AnimatedVisibility(visible = isExpanded) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth()
+                            // Muscle group header (always visible)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        expandedState[muscleGroup.id] = !isExpanded
+                                    }
+                                    .padding(16.dp)
+                                    .height(IntrinsicSize.Min),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                if (muscleGroup.exercises.isNullOrEmpty()) {
-                                    Text(
-                                        text = "No exercises available for this muscle group",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.padding(vertical = 8.dp)
-                                    )
-                                } else {
-                                    muscleGroup.exercises.forEach { exercise ->
-                                        ExerciseItem(exercise = exercise)
+                                Text(
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    text = muscleGroup.muscleName
+                                )
+
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                                    modifier = Modifier.rotate(rotationState)
+                                )
+                            }
+
+                            // Exercises list (visible only when expanded)
+                            AnimatedVisibility(visible = isExpanded) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    if (muscleGroup.exercises.isNullOrEmpty()) {
+                                        Text(
+                                            text = "No exercises available for this muscle group",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+                                    } else {
+                                        muscleGroup.exercises.forEach { exercise ->
+                                            ExerciseItem(exercise = exercise)
+                                        }
                                     }
                                 }
                             }
@@ -258,6 +298,13 @@ private fun WorkoutListPreview() {
                     exercises = emptyList()
                 )
             ),
+            muscles = listOf(
+                MuscleGroup(id = 1, name = "Biceps"),
+                MuscleGroup(id = 2, name = "Triceps"),
+                MuscleGroup(id = 3, name = "Chest"),
+                MuscleGroup(id = 4, name = "Shoulders")
+            ),
+            selectedMuscleIds = setOf(1L, 3L), // Preview with multiple selections
             expandedState = remember { mutableStateMapOf(1L to true) }
         )
     }
