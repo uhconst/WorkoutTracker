@@ -15,6 +15,7 @@ class GetExerciseByIdUseCase(
             """
                         id,
                         name,
+                        muscle_groups_id,
                         weight_logs(
                             id,
                             created_at,
@@ -22,11 +23,11 @@ class GetExerciseByIdUseCase(
                         )
                     """.trimIndent()
         )
-        return client.from("exercises").delete {
-            select(columns = columns)
-            filter {
-                Exercise::id eq id
-            }
-        }.decodeSingle<Exercise>()
+        return client.from("exercises")
+            .select(columns = columns) {
+                filter {
+                    Exercise::id eq id
+                }
+            }.decodeSingle<Exercise>()
     }
 }
