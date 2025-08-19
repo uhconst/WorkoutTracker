@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uhc.workouttracker.muscle.data.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.GetMuscleGroupsUseCase
+import com.uhc.workouttracker.workout.data.Exercise
 import com.uhc.workouttracker.workout.data.MuscleGroupsWithExercises
 import com.uhc.workouttracker.workout.domain.GetExercisesUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+// Shared data store for exercise editing
+object ExerciseEditStore {
+    private val _selectedExercise = MutableStateFlow<Exercise?>(null)
+    val selectedExercise = _selectedExercise.asStateFlow()
+    
+    fun setExercise(exercise: Exercise?) {
+        _selectedExercise.value = exercise
+    }
+}
 
 class ExerciseListViewModel(
     private val getExercisesUseCase: GetExercisesUseCase,
@@ -28,6 +39,10 @@ class ExerciseListViewModel(
     // Selected muscle filters state - using a Set to store multiple selections
     private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMuscleIds = _selectedMuscleIds.asStateFlow()
+
+    fun selectExerciseForEdit(exercise: Exercise) {
+        ExerciseEditStore.setExercise(exercise)
+    }
 
     // Filtered exercises based on selected muscles
     val filteredExercises: StateFlow<List<MuscleGroupsWithExercises>> = combine(

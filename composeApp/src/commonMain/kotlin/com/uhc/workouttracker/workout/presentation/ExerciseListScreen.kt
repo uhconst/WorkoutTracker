@@ -37,9 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
 import com.uhc.workouttracker.muscle.data.MuscleGroup
+import com.uhc.workouttracker.navigation.LocalNavController
+import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.workout.data.Exercise
 import com.uhc.workouttracker.workout.data.MuscleGroupsWithExercises
 import com.uhc.workouttracker.workout.data.WeightLogs
@@ -48,6 +51,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ExerciseListScreen(drawerState: DrawerState? = null) {
+    val navController = LocalNavController.current
+
     val viewModel: ExerciseListViewModel = koinViewModel()
     val exercisesGroupedByMuscle by viewModel.filteredExercises.collectAsState()
     val muscles by viewModel.muscles.collectAsState()
@@ -62,7 +67,9 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
         muscles = muscles,
         selectedMuscleIds = selectedMuscleIds,
         onMuscleSelected = viewModel::selectMuscleFilter,
-        drawerState = drawerState
+        onExerciseSelected = viewModel::selectExerciseForEdit,
+        drawerState = drawerState,
+        navController = navController
     )
 }
 
@@ -73,7 +80,9 @@ private fun ExerciseListLayout(
     muscles: List<MuscleGroup> = emptyList(),
     selectedMuscleIds: Set<Long> = emptySet(),
     onMuscleSelected: (Long?) -> Unit = {},
+    onExerciseSelected: (Exercise) -> Unit = {},
     drawerState: DrawerState? = null,
+    navController: NavController? = null,
     expandedState: SnapshotStateMap<Long, Boolean> = remember { mutableStateMapOf() }
 ) {
     WorkoutTrackerAppBar(
@@ -171,7 +180,11 @@ private fun ExerciseListLayout(
                                         )
                                     } else {
                                         muscleGroup.exercises.forEach { exercise ->
-                                            ExerciseItem(exercise = exercise)
+                                            ExerciseItem(
+                                                exercise = exercise,
+                                                navController = navController,
+                                                onExerciseSelected = onExerciseSelected
+                                            )
                                         }
                                     }
                                 }
@@ -185,13 +198,23 @@ private fun ExerciseListLayout(
 }
 
 @Composable
-private fun ExerciseItem(exercise: Exercise) {
+private fun ExerciseItem(
+    exercise: Exercise,
+    navController: NavController? = null,
+    onExerciseSelected: (Exercise) -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clickable {
-                // Navigation will be implemented later
+                // Select the exercise for editing
+                onExerciseSelected(exercise)
+
+                // Navigate to the AddExerciseScreen
+                navController?.navigate(NavRoute.AddExerciseDestination(exercise.id)) {
+                    launchSingleTop = true
+                }
             },
         shape = RoundedCornerShape(6.dp)
     ) {

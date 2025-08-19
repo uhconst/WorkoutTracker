@@ -17,6 +17,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,23 +27,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
 import com.uhc.workouttracker.muscle.data.MuscleGroup
+import com.uhc.workouttracker.navigation.LocalNavController
+import com.uhc.workouttracker.workout.data.Exercise
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AddExerciseScreen(
     drawerState: DrawerState? = null,
-    navController: NavHostController? = null,
+    exerciseId: Long? = null
 ) {
+    val navController = LocalNavController.current
     val viewModel: AddExerciseViewModel = koinViewModel()
     val muscles by viewModel.muscles.collectAsState()
+    val editingExercise by viewModel.editingExercise.collectAsState()
+    
+    // Set the exercise to edit when provided
+    LaunchedEffect(exerciseId) {
+        exerciseId?.let { viewModel.setExerciseToEdit(it) }
+    }
 
     AddExerciseLayout(
         muscleGroups = muscles,
+        exercise = editingExercise,
         onSaveExercise = { name, muscleGroupId, weight ->
             viewModel.saveExercise(name, muscleGroupId, weight)
             navController?.popBackStack()
@@ -55,12 +65,24 @@ fun AddExerciseScreen(
 @Composable
 fun AddExerciseLayout(
     muscleGroups: List<MuscleGroup> = emptyList(),
+    exercise: Exercise? = null,
     onSaveExercise: (name: String, muscleGroupId: Long, weight: Double) -> Unit = { _, _, _ -> },
-    drawerState: DrawerState? = null
+    drawerState: DrawerState? = null,
+    isEditMode: Boolean = false
 ) {
-    var exerciseName by remember { mutableStateOf("") }
-    var selectedMuscleGroup by remember { mutableStateOf<MuscleGroup?>(null) }
-    var weight by remember { mutableStateOf("") }
+    var exerciseName by remember(exercise) { mutableStateOf(exercise?.name ?: "") }
+    var selectedMuscleGroup by remember(exercise, muscleGroups) {
+        mutableStateOf(
+            exercise?.muscleGroupsId?.let { id ->
+                muscleGroups.find { it.id == id }
+            }
+        )
+    }
+    var weight by remember(exercise) {
+        mutableStateOf(
+            exercise?.weightLogs?.firstOrNull()?.weight?.toString() ?: ""
+        )
+    }
     var expanded by remember { mutableStateOf(false) }
 
     var exerciseNameError by remember { mutableStateOf(false) }

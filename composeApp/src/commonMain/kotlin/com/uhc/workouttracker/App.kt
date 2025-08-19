@@ -26,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.navigation.TicketMasterNavHost
@@ -42,10 +41,9 @@ data class NavigationItem(
 
 @Composable
 @Preview //todo delete
-fun App() {
+fun App(navController: NavHostController) {
     WorkoutTrackerTheme {
         Surface {
-            val navController: NavHostController = rememberNavController()
             val drawerState = rememberDrawerState(DrawerValue.Closed)
             val scope = rememberCoroutineScope()
             var selectedItemIndex by remember { mutableStateOf(0) }
@@ -59,10 +57,9 @@ fun App() {
                             contentDescription = "View Workouts"
                         )
                     },
-                    route = NavRoute.WorkoutListDestination.value,
                     onClick = {
-                        navController.navigate(NavRoute.WorkoutListDestination.value) {
-                            popUpTo(NavRoute.WorkoutListDestination.value) { inclusive = true }
+                        navController.navigate(NavRoute.WorkoutListDestination) {
+                            popUpTo(NavRoute.WorkoutListDestination) { inclusive = true }
                         }
                     }
                 ),
@@ -75,8 +72,8 @@ fun App() {
                         )
                     },
                     onClick = {
-                        navController.navigate(NavRoute.MuscleGroupsDestination.value) {
-                            popUpTo(NavRoute.MuscleGroupsDestination.value) { inclusive = true }
+                        navController.navigate(NavRoute.MuscleGroupsDestination) {
+                            popUpTo(NavRoute.MuscleGroupsDestination) { inclusive = true }
                         }
                     }
                 ),
@@ -84,8 +81,8 @@ fun App() {
                     title = "Add Exercise",
                     icon = { Icon(Icons.Default.Add, contentDescription = "Add Exercise") },
                     onClick = {
-                        navController.navigate(NavRoute.AddExerciseDestination.value) {
-                            popUpTo(NavRoute.WorkoutListDestination.value) { inclusive = true }
+                        navController.navigate(NavRoute.AddExerciseDestination()) {
+                            popUpTo(NavRoute.WorkoutListDestination) { inclusive = true }
                         }
                     }
                 ),
@@ -99,9 +96,9 @@ fun App() {
                 NavigationItem(
                     title = "Logout",
                     icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout") },
-                    route = NavRoute.AuthenticationDestination.value,
+//                    route = NavRoute.AuthenticationDestination,
                     onClick = {
-                        navController.navigate(NavRoute.AuthenticationDestination.value) {
+                        navController.navigate(NavRoute.AuthenticationDestination) {
                             popUpTo(navController.graph.id) { inclusive = true }
                         }
                     }

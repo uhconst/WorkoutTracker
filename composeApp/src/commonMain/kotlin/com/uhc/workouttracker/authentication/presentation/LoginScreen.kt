@@ -27,26 +27,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import io.github.jan.supabase.compose.auth.ui.ProviderButtonContent
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.uhc.workouttracker.authentication.presentation.components.OTPDialog
 import com.uhc.workouttracker.authentication.presentation.components.OTPDialogState
 import com.uhc.workouttracker.authentication.presentation.components.PasswordField
 import com.uhc.workouttracker.authentication.presentation.components.PasswordRecoveryDialog
+import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.compose.auth.ui.ProviderButtonContent
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(AuthUiExperimental::class)
 @Composable
-fun LoginScreen(
-    navController: NavHostController
-) {
+fun LoginScreen() {
+    val navController = LocalNavController.current
 
     val viewModel: LoginViewModel = koinViewModel()
 
@@ -54,7 +53,7 @@ fun LoginScreen(
 
     LaunchedEffect(sessionStatus) {
         if (sessionStatus is SessionStatus.Authenticated) {
-            navController.navigate(NavRoute.WorkoutListDestination.value)
+            navController?.navigate(NavRoute.WorkoutListDestination)
         }
     }
 
@@ -107,7 +106,10 @@ fun LoginScreen(
                 viewModel.loginWithGoogle()
             }
         ) {
-            ProviderButtonContent(Google, text = if (signUp) "Sign Up with Google" else "Login with Google")
+            ProviderButtonContent(
+                Google,
+                text = if (signUp) "Sign Up with Google" else "Login with Google"
+            )
         }
 
         TextButton(
@@ -129,7 +131,7 @@ fun LoginScreen(
         }
     }
 
-    if(otpDialogState is OTPDialogState.Visible) {
+    if (otpDialogState is OTPDialogState.Visible) {
         val state = (otpDialogState as OTPDialogState.Visible)
         OTPDialog(
             email = state.email,
@@ -141,17 +143,21 @@ fun LoginScreen(
         )
     }
 
-    if(showPasswordRecoveryDialog) {
+    if (showPasswordRecoveryDialog) {
         PasswordRecoveryDialog(
             onDismiss = { showPasswordRecoveryDialog = false },
             onConfirm = { email ->
                 viewModel.resetPassword(email)
-                otpDialogState = OTPDialogState.Visible(title = "Password recovery", email = email, resetFlow = true)
+                otpDialogState = OTPDialogState.Visible(
+                    title = "Password recovery",
+                    email = email,
+                    resetFlow = true
+                )
             }
         )
     }
 
-    if(loginAlert != null) {
+    if (loginAlert != null) {
         AlertDialog(
             onDismissRequest = {
                 viewModel.alert.value = null

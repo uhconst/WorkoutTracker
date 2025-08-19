@@ -7,6 +7,7 @@ import com.uhc.workouttracker.muscle.domain.DeleteMuscleGroupUseCase
 import com.uhc.workouttracker.muscle.domain.GetMuscleGroupsUseCase
 import com.uhc.workouttracker.muscle.domain.SetMuscleGroupUseCase
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel
+import com.uhc.workouttracker.workout.domain.GetExerciseByIdUseCase
 import com.uhc.workouttracker.workout.domain.GetExercisesUseCase
 import com.uhc.workouttracker.workout.domain.GetWeightLogsUseCase
 import com.uhc.workouttracker.workout.domain.SetExerciseUseCase
@@ -27,6 +28,7 @@ val domainModule = module {
     factory { GetMuscleGroupsUseCase(get()) }
     factory { SetMuscleGroupUseCase(get()) }
     factory { GetExercisesUseCase(get()) }
+    factory { GetExerciseByIdUseCase(get()) }
     factory { GetWeightLogsUseCase(get()) }
     factory { SetExerciseUseCase(get()) }
 }

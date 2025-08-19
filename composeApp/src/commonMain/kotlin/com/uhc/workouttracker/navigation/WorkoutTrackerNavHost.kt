@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.uhc.workouttracker.authentication.presentation.LoginScreen
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsScreen
 import com.uhc.workouttracker.workout.presentation.AddExerciseScreen
@@ -20,19 +21,20 @@ fun TicketMasterNavHost(
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = NavRoute.AuthenticationDestination.value
+        startDestination = NavRoute.AuthenticationDestination
     ) {
-        composable(route = NavRoute.AuthenticationDestination.value) {
-            LoginScreen(navController)
+        composable<NavRoute.AuthenticationDestination> {
+            LoginScreen()
         }
-        composable(route = NavRoute.WorkoutListDestination.value) {
+        composable<NavRoute.WorkoutListDestination> {
             ExerciseListScreen(drawerState = drawerState)
         }
-        composable(route = NavRoute.MuscleGroupsDestination.value) {
+        composable<NavRoute.MuscleGroupsDestination> {
             MuscleGroupsScreen(drawerState = drawerState)
         }
-        composable(route = NavRoute.AddExerciseDestination.value) {
-            AddExerciseScreen(drawerState = drawerState, navController = navController)
+        composable<NavRoute.AddExerciseDestination> { backStackEntry ->
+            val args = backStackEntry.toRoute<NavRoute.AddExerciseDestination>()
+            AddExerciseScreen(drawerState = drawerState, exerciseId = args.exerciseId)
         }
     }
 }

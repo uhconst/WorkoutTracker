@@ -3,13 +3,13 @@ package com.uhc.workouttracker.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class NavRoute(val value: String) {
+sealed class NavRoute {
     @Serializable
-    data object AuthenticationDestination: NavRoute("authentication")
+    data object AuthenticationDestination: NavRoute()
     @Serializable
-    data object WorkoutListDestination: NavRoute("workout-list")
+    data object WorkoutListDestination: NavRoute()
     @Serializable
-    data object MuscleGroupsDestination: NavRoute("muscles-group")
+    data object MuscleGroupsDestination: NavRoute()
     @Serializable
-    data object AddExerciseDestination: NavRoute("add-exercise")
+    data class AddExerciseDestination(val exerciseId: Long? = null): NavRoute()
 }
