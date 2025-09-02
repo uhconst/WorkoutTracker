@@ -5,9 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.uhc.workouttracker.muscle.data.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.GetMuscleGroupsUseCase
 import com.uhc.workouttracker.workout.data.Exercise
-import com.uhc.workouttracker.workout.data.WeightLogs
 import com.uhc.workouttracker.workout.domain.GetExerciseByIdUseCase
-import com.uhc.workouttracker.workout.domain.SetExerciseUseCase
+import com.uhc.workouttracker.workout.domain.SaveExerciseUseCase
+import com.uhc.workouttracker.workout.domain.UpdateExerciseUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,8 @@ import kotlinx.coroutines.launch
 
 class AddExerciseViewModel(
     getMuscleGroupsUseCase: GetMuscleGroupsUseCase,
-    private val setExerciseUseCase: SetExerciseUseCase,
+    private val updateExerciseUseCase: UpdateExerciseUseCase,
+    private val saveExerciseUseCase: SaveExerciseUseCase,
     private val getExerciseByIdUseCase: GetExerciseByIdUseCase
 ) : ViewModel() {
 
@@ -44,19 +45,21 @@ class AddExerciseViewModel(
 
     fun saveExercise(name: String, muscleGroupId: Long, weight: Double) {
         viewModelScope.launch {
-            val exercise = Exercise(
-                id = 0,
-                name = name,
-                muscleGroupsId = muscleGroupId,
-                weightLogs = listOf(
-                    WeightLogs(
-                        id = 0,
-                        weight = weight.toFloat()
-                    )
-                )
-            )
 
-            setExerciseUseCase(exercise)
+            if (editingExercise.value == null) {
+                saveExerciseUseCase(
+                    name = name,
+                    muscleGroupId = muscleGroupId,
+                    weight = weight
+                )
+            } else {
+                updateExerciseUseCase(
+                    id = editingExercise.value?.id,
+                    name = name,
+                    muscleGroupId = muscleGroupId,
+                    weight = weight
+                )
+            }
         }
     }
 
