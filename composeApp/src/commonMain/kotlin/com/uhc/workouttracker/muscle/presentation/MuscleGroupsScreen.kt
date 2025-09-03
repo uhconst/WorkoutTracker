@@ -33,8 +33,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
+import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
 import com.uhc.workouttracker.muscle.data.MuscleGroup
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel.EditState
@@ -82,16 +83,16 @@ private fun MuscleGroupsLayout(
     onDeleteClick: (MuscleGroup) -> Unit = {},
 ) {
     var inputText by remember { mutableStateOf("") }
-    
+
     // Update input text when edit state changes
     val isEditing = editState is EditState.Editing
     val currentlyEditedMuscle = if (editState is EditState.Editing) editState.muscleGroup else null
-    
+
     // Set input text when editing starts
     if (isEditing && currentlyEditedMuscle != null && inputText.isEmpty()) {
         inputText = currentlyEditedMuscle.name
     }
-    
+
     // Clear input text when editing is done
     if (!isEditing && inputText.isNotEmpty()) {
         inputText = ""
@@ -104,7 +105,6 @@ private fun MuscleGroupsLayout(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                /*.padding(16.dp)*/
         ) {
             OutlinedTextField(
                 value = inputText,
@@ -117,8 +117,8 @@ private fun MuscleGroupsLayout(
             OutlinedButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
-                onClick = { 
+                    .padding(top = Theme.dimensions.spacing.small),
+                onClick = {
                     if (isEditing) {
                         onUpdateMuscleGroupClick(inputText)
                     } else {
@@ -129,10 +129,10 @@ private fun MuscleGroupsLayout(
             ) {
                 Text(if (isEditing) "Update Muscle Group" else "Add Muscle Group")
             }
-            
+
             LazyColumn(
-                contentPadding = PaddingValues(vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = Theme.dimensions.spacing.xLarge),
+                verticalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.small),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
@@ -140,20 +140,20 @@ private fun MuscleGroupsLayout(
                     key = { it.id }
                 ) { muscle ->
                     val isCurrentlyEdited = currentlyEditedMuscle?.id == muscle.id
-                    
+
                     Card(
                         modifier = Modifier
                             .animateItem()
                             .fillMaxWidth(),
-                        colors = if (isCurrentlyEdited) 
+                        colors = if (isCurrentlyEdited)
                             CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                        else 
+                        else
                             CardDefaults.cardColors()
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(Theme.dimensions.spacing.medium)
                                 .height(IntrinsicSize.Min),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -162,9 +162,9 @@ private fun MuscleGroupsLayout(
                                 text = muscle.name,
                                 modifier = Modifier.weight(1f)
                             )
-                            
-                            Spacer(modifier = Modifier.width(8.dp))
-                            
+
+                            Spacer(modifier = Modifier.width(Theme.dimensions.spacing.small))
+
                             IconButton(
                                 onClick = {
                                     if (isCurrentlyEdited) {
@@ -180,7 +180,7 @@ private fun MuscleGroupsLayout(
                                     tint = if (isCurrentlyEdited) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                                 )
                             }
-                            
+
                             // Delete button (only shown when not editing)
                             if (!isCurrentlyEdited) {
                                 IconButton(

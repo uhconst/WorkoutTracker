@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -26,7 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
+import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.navigation.TicketMasterNavHost
 import kotlinx.coroutines.launch
@@ -87,16 +88,8 @@ fun App(navController: NavHostController) {
                     }
                 ),
                 NavigationItem(
-                    title = "Settings",
-                    icon = { Icon(Icons.Default.Menu, contentDescription = "Settings") },
-                    onClick = {
-                        // Navigate to Settings screen when implemented
-                    }
-                ),
-                NavigationItem(
                     title = "Logout",
                     icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout") },
-//                    route = NavRoute.AuthenticationDestination,
                     onClick = {
                         navController.navigate(NavRoute.AuthenticationDestination) {
                             popUpTo(navController.graph.id) { inclusive = true }
@@ -111,7 +104,7 @@ fun App(navController: NavHostController) {
                     ModalDrawerSheet {
                         Text(
                             "Workout Tracker",
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(Theme.dimensions.spacing.medium),
                             style = MaterialTheme.typography.titleLarge
                         )
                         HorizontalDivider(Modifier.padding(horizontal = 16.dp))

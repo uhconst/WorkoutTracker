@@ -26,8 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
+import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
 import com.uhc.workouttracker.muscle.data.MuscleGroup
 import com.uhc.workouttracker.navigation.LocalNavController
@@ -44,7 +45,7 @@ fun AddExerciseScreen(
     val viewModel: AddExerciseViewModel = koinViewModel()
     val muscles by viewModel.muscles.collectAsState()
     val editingExercise by viewModel.editingExercise.collectAsState()
-    
+
     // Set the exercise to edit when provided
     LaunchedEffect(exerciseId) {
         exerciseId?.let { viewModel.setExerciseToEdit(it) }
@@ -89,17 +90,19 @@ fun AddExerciseLayout(
     var muscleGroupError by remember { mutableStateOf(false) }
     var weightError by remember { mutableStateOf(false) }
 
+    val isEditing = exercise != null
+
     WorkoutTrackerAppBar(
-        title = "Add Exercise",
+        title = if (isEditing) "Edit Exercise" else "Add Exercise",
         drawerState = drawerState,
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(Theme.dimensions.spacing.medium),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.medium)
         ) {
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -171,7 +174,7 @@ fun AddExerciseLayout(
                 } else null
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Theme.dimensions.spacing.medium))
 
             Button(
                 modifier = Modifier.fillMaxWidth(),

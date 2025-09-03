@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.uhc.workouttracker.core.theme.Theme
+import com.uhc.workouttracker.core.theme.dimensions
 import io.github.jan.supabase.compose.auth.ui.AuthForm
 import io.github.jan.supabase.compose.auth.ui.LocalAuthState
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
@@ -33,7 +35,7 @@ fun PasswordChangeDialog(
             text = {
                 Column {
                     Text("Please enter your new password.")
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(Theme.dimensions.spacing.small))
                     OutlinedPasswordField(
                         value = password,
                         onValueChange = { password = it },

@@ -38,7 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
+import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
 import com.uhc.workouttracker.muscle.data.MuscleGroup
 import com.uhc.workouttracker.navigation.LocalNavController
@@ -95,11 +97,11 @@ private fun ExerciseListLayout(
                 .padding(innerPadding)
         ) {
             LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = Theme.dimensions.spacing.medium),
+                horizontalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.small),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = Theme.dimensions.spacing.small)
             ) {
                 // "All" filter chip
                 item {
@@ -121,8 +123,8 @@ private fun ExerciseListLayout(
             }
 
             LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(Theme.dimensions.spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.small),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
@@ -149,7 +151,7 @@ private fun ExerciseListLayout(
                                     .clickable {
                                         expandedState[muscleGroup.id] = !isExpanded
                                     }
-                                    .padding(16.dp)
+                                    .padding(Theme.dimensions.spacing.medium)
                                     .height(IntrinsicSize.Min),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
@@ -176,7 +178,7 @@ private fun ExerciseListLayout(
                                         Text(
                                             text = "No exercises available for this muscle group",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier.padding(8.dp)
+                                            modifier = Modifier.padding(Theme.dimensions.spacing.small)
                                         )
                                     } else {
                                         muscleGroup.exercises.forEach { exercise ->
@@ -221,7 +223,7 @@ private fun ExerciseItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 28.dp, vertical = 8.dp),
+                .padding(horizontal = 28.dp, vertical = Theme.dimensions.spacing.small),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
