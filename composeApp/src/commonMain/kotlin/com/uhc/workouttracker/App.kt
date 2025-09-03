@@ -17,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,9 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
+import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.navigation.TicketMasterNavHost
 import kotlinx.coroutines.launch
@@ -41,95 +44,104 @@ data class NavigationItem(
 )
 
 @Composable
-@Preview //todo delete
-fun App(navController: NavHostController) {
-    WorkoutTrackerTheme {
-        Surface {
-            val drawerState = rememberDrawerState(DrawerValue.Closed)
-            val scope = rememberCoroutineScope()
-            var selectedItemIndex by remember { mutableStateOf(0) }
+@Preview
+fun App() {
+    val navController: NavHostController = rememberNavController()
 
-            val navigationItems = listOf(
-                NavigationItem(
-                    title = "View Workouts",
-                    icon = {
-                        Icon(
-                            Icons.Default.FitnessCenter,
-                            contentDescription = "View Workouts"
-                        )
-                    },
-                    onClick = {
-                        navController.navigate(NavRoute.WorkoutListDestination) {
-                            popUpTo(NavRoute.WorkoutListDestination) { inclusive = true }
-                        }
-                    }
-                ),
-                NavigationItem(
-                    title = "Add Muscle Group",
-                    icon = {
-                        Icon(
-                            Icons.Default.FitnessCenter,
-                            contentDescription = "Add Muscle Group"
-                        )
-                    },
-                    onClick = {
-                        navController.navigate(NavRoute.MuscleGroupsDestination) {
-                            popUpTo(NavRoute.MuscleGroupsDestination) { inclusive = true }
-                        }
-                    }
-                ),
-                NavigationItem(
-                    title = "Add Exercise",
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Add Exercise") },
-                    onClick = {
-                        navController.navigate(NavRoute.AddExerciseDestination()) {
-                            popUpTo(NavRoute.WorkoutListDestination) { inclusive = true }
-                        }
-                    }
-                ),
-                NavigationItem(
-                    title = "Logout",
-                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout") },
-                    onClick = {
-                        navController.navigate(NavRoute.AuthenticationDestination) {
-                            popUpTo(navController.graph.id) { inclusive = true }
-                        }
-                    }
-                )
-            )
+    CompositionLocalProvider(LocalNavController provides navController) {
+        WorkoutTrackerTheme {
+            Surface {
+                val drawerState = rememberDrawerState(DrawerValue.Closed)
+                val scope = rememberCoroutineScope()
+                var selectedItemIndex by remember { mutableStateOf(0) }
 
-            ModalNavigationDrawer(
-                drawerState = drawerState,
-                drawerContent = {
-                    ModalDrawerSheet {
-                        Text(
-                            "Workout Tracker",
-                            modifier = Modifier.padding(Theme.dimensions.spacing.medium),
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        navigationItems.forEachIndexed { index, item ->
-                            NavigationDrawerItem(
-                                label = { Text(item.title) },
-                                selected = index == selectedItemIndex,
-                                onClick = {
-                                    selectedItemIndex = index
-                                    scope.launch {
-                                        drawerState.close()
-                                    }
-                                    item.onClick()
-                                },
-                                icon = item.icon,
-                                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                val navigationItems = listOf(
+                    NavigationItem(
+                        title = "View Workouts",
+                        icon = {
+                            Icon(
+                                Icons.Default.FitnessCenter,
+                                contentDescription = "View Workouts"
                             )
+                        },
+                        onClick = {
+                            navController.navigate(NavRoute.WorkoutListDestination) {
+                                popUpTo(NavRoute.WorkoutListDestination) { inclusive = true }
+                            }
+                        }
+                    ),
+                    NavigationItem(
+                        title = "Add Muscle Group",
+                        icon = {
+                            Icon(
+                                Icons.Default.FitnessCenter,
+                                contentDescription = "Add Muscle Group"
+                            )
+                        },
+                        onClick = {
+                            navController.navigate(NavRoute.MuscleGroupsDestination) {
+                                popUpTo(NavRoute.MuscleGroupsDestination) { inclusive = true }
+                            }
+                        }
+                    ),
+                    NavigationItem(
+                        title = "Add Exercise",
+                        icon = { Icon(Icons.Default.Add, contentDescription = "Add Exercise") },
+                        onClick = {
+                            navController.navigate(NavRoute.AddExerciseDestination()) {
+                                popUpTo(NavRoute.WorkoutListDestination) { inclusive = true }
+                            }
+                        }
+                    ),
+                    NavigationItem(
+                        title = "Logout",
+                        icon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Logout"
+                            )
+                        },
+                        onClick = {
+                            navController.navigate(NavRoute.AuthenticationDestination) {
+                                popUpTo(navController.graph.id) { inclusive = true }
+                            }
+                        }
+                    )
+                )
+
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet {
+                            Text(
+                                "Workout Tracker",
+                                modifier = Modifier.padding(Theme.dimensions.spacing.medium),
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            navigationItems.forEachIndexed { index, item ->
+                                NavigationDrawerItem(
+                                    label = { Text(item.title) },
+                                    selected = index == selectedItemIndex,
+                                    onClick = {
+                                        selectedItemIndex = index
+                                        scope.launch {
+                                            drawerState.close()
+                                        }
+                                        item.onClick()
+                                    },
+                                    icon = item.icon,
+                                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                                )
+                            }
                         }
                     }
+                ) {
+                    TicketMasterNavHost(
+                        navController = navController,
+                        drawerState = drawerState
+                    )
                 }
-            ) {
-                TicketMasterNavHost(
-                    navController = navController,
-                    drawerState = drawerState
-                )
             }
         }
     }

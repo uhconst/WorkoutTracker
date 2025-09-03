@@ -17,11 +17,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val navController: NavHostController = rememberNavController()
-
-            CompositionLocalProvider(LocalNavController provides navController) {
-                App(navController)
-            }
+            App()
         }
     }
 }
@@ -29,6 +25,5 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun AppAndroidPreview() {
-    val navController: NavHostController = rememberNavController()
-    App(navController)
+    App()
 }
