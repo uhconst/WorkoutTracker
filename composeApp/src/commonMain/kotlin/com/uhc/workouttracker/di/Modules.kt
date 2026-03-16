@@ -45,8 +45,8 @@ val viewModelModule = module {
 val supabaseModule = module {
     single {
         createSupabaseClient(
-            "https://evblichpfnyvvboqhsht.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2YmxpY2hwZm55dnZib3Foc2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4MzYzNDUsImV4cCI6MjA0OTQxMjM0NX0.9hGBigU1xpJnxH3HdAs3-0I8oq_83P7MfArRL73T62I"
+            "https://zlmutumvuenpjowstien.supabase.co",
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbXV0dW12dWVucGpvd3N0aWVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2OTA5MzEsImV4cCI6MjA4OTI2NjkzMX0.MAFZl-L4bkL4F7NeHJUE5UnOGxSwRmPqOxgJ51HgptU"
         ) {
             install(Auth)
             install(Postgrest)
