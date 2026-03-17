@@ -19,6 +19,9 @@ materialIconsCore = "1.7.3"
 navigationCompose = "2.9.1"
 supabase = "3.2.6"
 ksp = "2.1.20-2.0.0"
+mockk = "1.13.13"
+turbine = "1.2.0"
+coroutinesTest = "1.9.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -47,6 +50,12 @@ supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", v
 supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabase" }
 supabase-auth = { module = "io.github.jan-tennert.supabase:compose-auth", version.ref = "supabase" }
 supabase-auth-ui = { module = "io.github.jan-tennert.supabase:compose-auth-ui", version.ref = "supabase" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-ui-tooling" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-ui-tooling" }
 
 
 [plugins]

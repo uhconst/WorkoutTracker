@@ -73,7 +73,7 @@ fun MuscleGroupsScreen(drawerState: DrawerState? = null) {
 }
 
 @Composable
-private fun MuscleGroupsLayout(
+internal fun MuscleGroupsLayout(
     muscleGroups: List<MuscleGroup> = emptyList(),
     editState: EditState = EditState.NotEditing,
     drawerState: DrawerState? = null,

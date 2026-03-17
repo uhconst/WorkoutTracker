@@ -67,6 +67,23 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        val androidUnitTest by getting {
+            dependencies {
+                implementation(libs.junit)
+                implementation(libs.mockk)
+                implementation(libs.turbine)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(libs.junit)
+                implementation(libs.mockk.android)
+                implementation(libs.androidx.testExt.junit)
+                implementation(libs.androidx.espresso.core)
+                implementation(libs.compose.ui.test.junit4)
+            }
+        }
     }
 }
 
@@ -80,6 +97,7 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     packaging {
         resources {
@@ -99,5 +117,6 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
 

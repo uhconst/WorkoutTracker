@@ -76,7 +76,7 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExerciseListLayout(
+internal fun ExerciseListLayout(
     exercisesGroupedByMuscle: List<MuscleWithExercises> = emptyList(),
     muscles: List<MuscleGroup> = emptyList(),
     selectedMuscleIds: Set<Long> = emptySet(),
