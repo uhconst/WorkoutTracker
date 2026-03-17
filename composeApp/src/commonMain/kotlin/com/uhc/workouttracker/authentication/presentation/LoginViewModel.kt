@@ -6,6 +6,7 @@ import com.uhc.workouttracker.authentication.domain.model.AuthState
 import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -19,8 +20,12 @@ class LoginViewModel(
     val alert = MutableStateFlow<String?>(null)
     val passwordReset = MutableStateFlow<Boolean>(false)
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
     fun signUp(email: String, password: String) {
         viewModelScope.launch {
+            _isLoading.value = true
             runCatching {
                 authRepository.signUp(email, password)
             }.onSuccess {
@@ -28,17 +33,20 @@ class LoginViewModel(
             }.onFailure {
                 alert.value = "There was an error while registering: ${it.message}"
             }
+            _isLoading.value = false
         }
     }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
+            _isLoading.value = true
             runCatching {
                 authRepository.signIn(email, password)
             }.onFailure {
                 it.printStackTrace()
                 alert.value = "There was an error while logging in. Check your credentials and try again."
             }
+            _isLoading.value = false
         }
     }
 

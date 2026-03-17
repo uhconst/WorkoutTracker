@@ -209,7 +209,7 @@ private fun ExerciseItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 28.dp, vertical = Theme.dimensions.spacing.small),
+                .padding(horizontal = Theme.dimensions.spacing.medium, vertical = Theme.dimensions.spacing.small),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

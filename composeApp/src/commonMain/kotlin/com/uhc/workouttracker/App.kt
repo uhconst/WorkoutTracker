@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -19,13 +20,11 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
@@ -53,7 +52,14 @@ fun App() {
             Surface {
                 val drawerState = rememberDrawerState(DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
-                var selectedItemIndex by remember { mutableStateOf(0) }
+                val currentBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = currentBackStackEntry?.destination?.route ?: ""
+                val selectedItemIndex = when {
+                    currentRoute.contains("WorkoutListDestination") -> 0
+                    currentRoute.contains("MuscleGroupsDestination") -> 1
+                    currentRoute.contains("AddExerciseDestination") -> 2
+                    else -> 0
+                }
 
                 val navigationItems = listOf(
                     NavigationItem(
@@ -71,11 +77,11 @@ fun App() {
                         }
                     ),
                     NavigationItem(
-                        title = "Add Muscle Group",
+                        title = "Muscle Groups",
                         icon = {
                             Icon(
-                                Icons.Default.FitnessCenter,
-                                contentDescription = "Add Muscle Group"
+                                Icons.Default.Category,
+                                contentDescription = "Muscle Groups"
                             )
                         },
                         onClick = {
@@ -124,7 +130,6 @@ fun App() {
                                     label = { Text(item.title) },
                                     selected = index == selectedItemIndex,
                                     onClick = {
-                                        selectedItemIndex = index
                                         scope.launch {
                                             drawerState.close()
                                         }

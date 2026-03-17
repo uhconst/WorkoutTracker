@@ -6,9 +6,11 @@ import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -23,6 +25,9 @@ class AddExerciseViewModel(
 
     private val _editingExercise = MutableStateFlow<Exercise?>(null)
     val editingExercise = _editingExercise.asStateFlow()
+
+    private val _saveSuccess = MutableSharedFlow<String>()
+    val saveSuccess = _saveSuccess.asSharedFlow()
 
     fun saveExercise(name: String, muscleGroupId: Long, weight: Double) {
         viewModelScope.launch {
@@ -40,6 +45,7 @@ class AddExerciseViewModel(
                     weight = weight
                 )
             }
+            _saveSuccess.emit("Exercise saved")
         }
     }
 

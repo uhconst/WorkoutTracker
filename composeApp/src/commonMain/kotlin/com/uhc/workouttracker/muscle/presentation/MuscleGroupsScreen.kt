@@ -105,6 +105,9 @@ private fun MuscleGroupsLayout(
             modifier = Modifier
                 .padding(innerPadding)
         ) {
+            Column(
+                modifier = Modifier.padding(horizontal = Theme.dimensions.spacing.medium)
+            ) {
             OutlinedTextField(
                 value = inputText,
                 onValueChange = { inputText = it },
@@ -128,6 +131,7 @@ private fun MuscleGroupsLayout(
             ) {
                 Text(if (isEditing) "Update Muscle Group" else "Add Muscle Group")
             }
+            } // end input section Column
 
             LazyColumn(
                 contentPadding = PaddingValues(vertical = Theme.dimensions.spacing.xLarge),

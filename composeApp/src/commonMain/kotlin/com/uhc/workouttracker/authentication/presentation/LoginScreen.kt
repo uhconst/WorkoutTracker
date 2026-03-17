@@ -3,7 +3,11 @@ package com.uhc.workouttracker.authentication.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,7 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -50,6 +56,7 @@ fun LoginScreen() {
     val viewModel: LoginViewModel = koinViewModel()
 
     val sessionStatus by viewModel.sessionStatus.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(sessionStatus) {
         if (sessionStatus is AuthState.Authenticated) {
@@ -63,71 +70,93 @@ fun LoginScreen() {
     var otpDialogState by remember { mutableStateOf<OTPDialogState>(OTPDialogState.Invisible) }
     var showPasswordRecoveryDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        var password by remember { mutableStateOf("") }
-        val passwordFocus = remember { FocusRequester() }
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            singleLine = true,
-            label = { Text("E-Mail") },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next
-            ),
-            keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
-            leadingIcon = { Icon(Icons.Filled.Mail, "Mail") },
-        )
-        PasswordField(
-            password = password,
-            onPasswordChanged = { password = it },
-            modifier = Modifier.focusRequester(passwordFocus)
-                .padding(top = 10.dp),
-            imeAction = ImeAction.Done,
-            keyboardActions = KeyboardActions(onDone = {
-                authenticate(signUp, viewModel, email, password)
-            }),
-        )
-
-        Button(
-            onClick = { authenticate(signUp, viewModel, email, password) },
-            modifier = Modifier.padding(top = 10.dp),
-            enabled = email.isNotBlank() && password.isNotBlank()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(if (signUp) "Register" else "Login")
-        }
-
-        OutlinedButton(
-            onClick = {
-                viewModel.loginWithGoogle()
-            }
-        ) {
-            ProviderButtonContent(
-                Google,
-                text = if (signUp) "Sign Up with Google" else "Login with Google"
+            // App name header
+            Text(
+                text = "Workout Tracker",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.primary
             )
+            Text(
+                text = "Track your progress",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            var password by remember { mutableStateOf("") }
+            val passwordFocus = remember { FocusRequester() }
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                singleLine = true,
+                label = { Text("E-Mail") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
+                leadingIcon = { Icon(Icons.Filled.Mail, "Mail") },
+            )
+            PasswordField(
+                password = password,
+                onPasswordChanged = { password = it },
+                modifier = Modifier.focusRequester(passwordFocus)
+                    .padding(top = 10.dp),
+                imeAction = ImeAction.Done,
+                keyboardActions = KeyboardActions(onDone = {
+                    authenticate(signUp, viewModel, email, password)
+                }),
+            )
+
+            Button(
+                onClick = { authenticate(signUp, viewModel, email, password) },
+                modifier = Modifier.padding(top = 10.dp),
+                enabled = email.isNotBlank() && password.isNotBlank() && !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Text(if (signUp) "Register" else "Login")
+                }
+            }
+
+            OutlinedButton(
+                onClick = { viewModel.loginWithGoogle() }
+            ) {
+                ProviderButtonContent(
+                    Google,
+                    text = if (signUp) "Sign Up with Google" else "Login with Google"
+                )
+            }
+
+            TextButton(
+                onClick = { otpDialogState = OTPDialogState.Visible(email) }
+            ) {
+                Text("Login with an OTP")
+            }
         }
 
-        TextButton(
-            onClick = { otpDialogState = OTPDialogState.Visible(email) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Login with an OTP")
-        }
-
-    }
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        TextButton(onClick = { signUp = !signUp }) {
-            Text(if (signUp) "Already have an account? Login" else "Not registered? Register")
-        }
-    }
-
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
-        TextButton(onClick = { showPasswordRecoveryDialog = true }) {
-            Text("Forgot password?")
+            TextButton(onClick = { signUp = !signUp }) {
+                Text(if (signUp) "Already have an account? Login" else "Not registered? Register")
+            }
+            TextButton(onClick = { showPasswordRecoveryDialog = true }) {
+                Text("Forgot password?")
+            }
         }
     }
 

@@ -1,11 +1,9 @@
 package com.uhc.workouttracker.workout.presentation
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -15,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,10 +44,17 @@ fun AddExerciseScreen(
     val viewModel: AddExerciseViewModel = koinViewModel()
     val muscles by viewModel.muscles.collectAsState()
     val editingExercise by viewModel.editingExercise.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Set the exercise to edit when provided
     LaunchedEffect(exerciseId) {
         exerciseId?.let { viewModel.setExerciseToEdit(it) }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.saveSuccess.collect { message ->
+            snackbarHostState.showSnackbar(message)
+            navController?.popBackStack()
+        }
     }
 
     AddExerciseLayout(
@@ -56,9 +62,9 @@ fun AddExerciseScreen(
         exercise = editingExercise,
         onSaveExercise = { name, muscleGroupId, weight ->
             viewModel.saveExercise(name, muscleGroupId, weight)
-            navController?.popBackStack()
         },
-        drawerState = drawerState
+        drawerState = drawerState,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -69,7 +75,7 @@ fun AddExerciseLayout(
     exercise: Exercise? = null,
     onSaveExercise: (name: String, muscleGroupId: Long, weight: Double) -> Unit = { _, _, _ -> },
     drawerState: DrawerState? = null,
-    isEditMode: Boolean = false
+    snackbarHostState: SnackbarHostState? = null
 ) {
     var exerciseName by remember(exercise) { mutableStateOf(exercise?.name ?: "") }
     var selectedMuscleGroup by remember(exercise, muscleGroups) {
@@ -95,89 +101,96 @@ fun AddExerciseLayout(
     WorkoutTrackerAppBar(
         title = if (isEditing) "Edit Exercise" else "Add Exercise",
         drawerState = drawerState,
+        snackbarHostState = snackbarHostState
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(Theme.dimensions.spacing.medium),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.medium)
         ) {
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Theme.dimensions.spacing.medium),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        readOnly = true,
+                        value = selectedMuscleGroup?.name ?: "",
+                        onValueChange = {},
+                        label = { Text("Muscle Group") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        isError = muscleGroupError,
+                        supportingText = if (muscleGroupError) {
+                            { Text("Please select a muscle group") }
+                        } else null
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        muscleGroups.forEach { muscleGroup ->
+                            DropdownMenuItem(
+                                text = { Text(muscleGroup.name) },
+                                onClick = {
+                                    selectedMuscleGroup = muscleGroup
+                                    expanded = false
+                                    muscleGroupError = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
-                    readOnly = true,
-                    value = selectedMuscleGroup?.name ?: "",
-                    onValueChange = {},
-                    label = { Text("Muscle Group") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    isError = muscleGroupError,
-                    supportingText = if (muscleGroupError) {
-                        { Text("Please select a muscle group") }
+                        .padding(top = Theme.dimensions.spacing.medium),
+                    value = exerciseName,
+                    onValueChange = {
+                        exerciseName = it
+                        exerciseNameError = false
+                    },
+                    label = { Text("Exercise Name") },
+                    isError = exerciseNameError,
+                    supportingText = if (exerciseNameError) {
+                        { Text("Please enter an exercise name") }
                     } else null
                 )
 
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    muscleGroups.forEach { muscleGroup ->
-                        DropdownMenuItem(
-                            text = { Text(muscleGroup.name) },
-                            onClick = {
-                                selectedMuscleGroup = muscleGroup
-                                expanded = false
-                                muscleGroupError = false
-                            }
-                        )
-                    }
-                }
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Theme.dimensions.spacing.medium),
+                    value = weight,
+                    onValueChange = {
+                        if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
+                            weight = it
+                            weightError = false
+                        }
+                    },
+                    label = { Text("Weight (kg)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = weightError,
+                    supportingText = if (weightError) {
+                        { Text("Please enter a valid weight") }
+                    } else null
+                )
             }
 
-            // Exercise Name Input
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = exerciseName,
-                onValueChange = {
-                    exerciseName = it
-                    exerciseNameError = false
-                },
-                label = { Text("Exercise Name") },
-                isError = exerciseNameError,
-                supportingText = if (exerciseNameError) {
-                    { Text("Please enter an exercise name") }
-                } else null
-            )
-
-            // Weight Input
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
-                value = weight,
-                onValueChange = {
-                    // Only allow numbers and a single decimal point
-                    if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                        weight = it
-                        weightError = false
-                    }
-                },
-                label = { Text("Weight") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                isError = weightError,
-                supportingText = if (weightError) {
-                    { Text("Please enter a valid weight") }
-                } else null
-            )
-
-            Spacer(modifier = Modifier.height(Theme.dimensions.spacing.medium))
-
             Button(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(Theme.dimensions.spacing.medium),
                 onClick = {
                     exerciseNameError = exerciseName.isBlank()
                     muscleGroupError = selectedMuscleGroup == null
