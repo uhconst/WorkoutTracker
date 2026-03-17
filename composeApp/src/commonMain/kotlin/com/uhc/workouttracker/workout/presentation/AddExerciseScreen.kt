@@ -30,9 +30,9 @@ import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
-import com.uhc.workouttracker.muscle.data.MuscleGroup
+import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.navigation.LocalNavController
-import com.uhc.workouttracker.workout.data.Exercise
+import com.uhc.workouttracker.workout.domain.model.Exercise
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -74,7 +74,7 @@ fun AddExerciseLayout(
     var exerciseName by remember(exercise) { mutableStateOf(exercise?.name ?: "") }
     var selectedMuscleGroup by remember(exercise, muscleGroups) {
         mutableStateOf(
-            exercise?.muscleGroupsId?.let { id ->
+            exercise?.muscleGroupId?.let { id ->
                 muscleGroups.find { it.id == id }
             }
         )

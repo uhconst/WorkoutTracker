@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +38,7 @@ import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
-import com.uhc.workouttracker.muscle.data.MuscleGroup
+import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel.EditState
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
@@ -84,18 +85,16 @@ private fun MuscleGroupsLayout(
 ) {
     var inputText by remember { mutableStateOf("") }
 
-    // Update input text when edit state changes
     val isEditing = editState is EditState.Editing
-    val currentlyEditedMuscle = if (editState is EditState.Editing) editState.muscleGroup else null
+    val currentlyEditedMuscle = (editState as? EditState.Editing)?.muscleGroup
 
-    // Set input text when editing starts
-    if (isEditing && currentlyEditedMuscle != null && inputText.isEmpty()) {
-        inputText = currentlyEditedMuscle.name
-    }
-
-    // Clear input text when editing is done
-    if (!isEditing && inputText.isNotEmpty()) {
-        inputText = ""
+    // Update input text when edit state changes
+    LaunchedEffect(editState) {
+        if (editState is EditState.Editing) {
+            inputText = editState.muscleGroup.name
+        } else {
+            inputText = ""
+        }
     }
 
     WorkoutTrackerAppBar(

@@ -2,12 +2,10 @@ package com.uhc.workouttracker.workout.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.uhc.workouttracker.muscle.data.MuscleGroup
-import com.uhc.workouttracker.muscle.domain.GetMuscleGroupsUseCase
-import com.uhc.workouttracker.workout.data.Exercise
-import com.uhc.workouttracker.workout.domain.GetExerciseByIdUseCase
-import com.uhc.workouttracker.workout.domain.SaveExerciseUseCase
-import com.uhc.workouttracker.workout.domain.UpdateExerciseUseCase
+import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
+import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
+import com.uhc.workouttracker.workout.domain.model.Exercise
+import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,45 +14,27 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class AddExerciseViewModel(
-    getMuscleGroupsUseCase: GetMuscleGroupsUseCase,
-    private val updateExerciseUseCase: UpdateExerciseUseCase,
-    private val saveExerciseUseCase: SaveExerciseUseCase,
-    private val getExerciseByIdUseCase: GetExerciseByIdUseCase
+    muscleGroupRepository: MuscleGroupRepository,
+    private val exerciseRepository: ExerciseRepository
 ) : ViewModel() {
 
-    val muscles: StateFlow<List<MuscleGroup>> = getMuscleGroupsUseCase()
+    val muscles: StateFlow<List<MuscleGroup>> = muscleGroupRepository.observeMuscleGroups()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _editingExercise =
-        MutableStateFlow<Exercise?>(null)
+    private val _editingExercise = MutableStateFlow<Exercise?>(null)
     val editingExercise = _editingExercise.asStateFlow()
-
-    init {
-        // Clear the selected exercise when the ViewModel is destroyed
-        viewModelScope.launch {
-            // This will be called when the ViewModel is cleared
-            onCleared()
-        }
-    }
-    
-    override fun onCleared() {
-        super.onCleared()
-        // Clear the selected exercise when navigating away
-        ExerciseEditStore.setExercise(null)
-    }
 
     fun saveExercise(name: String, muscleGroupId: Long, weight: Double) {
         viewModelScope.launch {
-
-            if (editingExercise.value == null) {
-                saveExerciseUseCase(
+            if (_editingExercise.value == null) {
+                exerciseRepository.saveExercise(
                     name = name,
                     muscleGroupId = muscleGroupId,
                     weight = weight
                 )
             } else {
-                updateExerciseUseCase(
-                    id = editingExercise.value?.id,
+                exerciseRepository.updateExercise(
+                    id = _editingExercise.value!!.id,
                     name = name,
                     muscleGroupId = muscleGroupId,
                     weight = weight
@@ -65,7 +45,7 @@ class AddExerciseViewModel(
 
     fun setExerciseToEdit(exerciseId: Long) {
         viewModelScope.launch {
-            _editingExercise.value = getExerciseByIdUseCase(exerciseId)
+            _editingExercise.value = exerciseRepository.getExerciseById(exerciseId)
         }
     }
 }

@@ -42,12 +42,12 @@ import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
-import com.uhc.workouttracker.muscle.data.MuscleGroup
+import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
-import com.uhc.workouttracker.workout.data.Exercise
-import com.uhc.workouttracker.workout.data.MuscleGroupsWithExercises
-import com.uhc.workouttracker.workout.data.WeightLogs
+import com.uhc.workouttracker.workout.domain.model.Exercise
+import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
+import com.uhc.workouttracker.workout.domain.model.WeightLog
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -69,7 +69,6 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
         muscles = muscles,
         selectedMuscleIds = selectedMuscleIds,
         onMuscleSelected = viewModel::selectMuscleFilter,
-        onExerciseSelected = viewModel::selectExerciseForEdit,
         drawerState = drawerState,
         navController = navController
     )
@@ -78,11 +77,10 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExerciseListLayout(
-    exercisesGroupedByMuscle: List<MuscleGroupsWithExercises> = emptyList(),
+    exercisesGroupedByMuscle: List<MuscleWithExercises> = emptyList(),
     muscles: List<MuscleGroup> = emptyList(),
     selectedMuscleIds: Set<Long> = emptySet(),
     onMuscleSelected: (Long?) -> Unit = {},
-    onExerciseSelected: (Exercise) -> Unit = {},
     drawerState: DrawerState? = null,
     navController: NavController? = null,
     expandedState: SnapshotStateMap<Long, Boolean> = remember { mutableStateMapOf() }
@@ -103,7 +101,6 @@ private fun ExerciseListLayout(
                     .fillMaxWidth()
                     .padding(vertical = Theme.dimensions.spacing.small)
             ) {
-                // "All" filter chip
                 item {
                     FilterChip(
                         selected = selectedMuscleIds.isEmpty(),
@@ -112,7 +109,6 @@ private fun ExerciseListLayout(
                     )
                 }
 
-                // Muscle group filter chips
                 items(muscles) { muscle ->
                     FilterChip(
                         selected = muscle.id in selectedMuscleIds,
@@ -137,14 +133,11 @@ private fun ExerciseListLayout(
                     )
 
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            // Muscle group header (always visible)
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -169,12 +162,11 @@ private fun ExerciseListLayout(
                                 )
                             }
 
-                            // Exercises list (visible only when expanded)
                             AnimatedVisibility(visible = isExpanded) {
                                 Column(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    if (muscleGroup.exercises.isNullOrEmpty()) {
+                                    if (muscleGroup.exercises.isEmpty()) {
                                         Text(
                                             text = "No exercises available for this muscle group",
                                             style = MaterialTheme.typography.bodyMedium,
@@ -184,8 +176,7 @@ private fun ExerciseListLayout(
                                         muscleGroup.exercises.forEach { exercise ->
                                             ExerciseItem(
                                                 exercise = exercise,
-                                                navController = navController,
-                                                onExerciseSelected = onExerciseSelected
+                                                navController = navController
                                             )
                                         }
                                     }
@@ -202,18 +193,13 @@ private fun ExerciseListLayout(
 @Composable
 private fun ExerciseItem(
     exercise: Exercise,
-    navController: NavController? = null,
-    onExerciseSelected: (Exercise) -> Unit = {}
+    navController: NavController? = null
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clickable {
-                // Select the exercise for editing
-                onExerciseSelected(exercise)
-
-                // Navigate to the AddExerciseScreen
                 navController?.navigate(NavRoute.AddExerciseDestination(exercise.id)) {
                     launchSingleTop = true
                 }
@@ -235,7 +221,7 @@ private fun ExerciseItem(
                     style = MaterialTheme.typography.bodyLarge
                 )
 
-                exercise.weightLogs?.lastOrNull()?.let { lastLog ->
+                exercise.weightLogs.lastOrNull()?.let { lastLog ->
                     Text(
                         text = "${lastLog.weight} kg",
                         style = MaterialTheme.typography.bodyMedium,
@@ -259,65 +245,65 @@ private fun WorkoutListPreview() {
     WorkoutTrackerTheme {
         ExerciseListLayout(
             exercisesGroupedByMuscle = listOf(
-                MuscleGroupsWithExercises(
+                MuscleWithExercises(
                     id = 1,
                     muscleName = "Biceps",
                     exercises = listOf(
                         Exercise(
                             id = 1,
                             name = "Barbell Curl",
-                            weightLogs = listOf(WeightLogs(id = 1, weight = 15f))
+                            weightLogs = listOf(WeightLog(id = 1, weight = 15f, exerciseId = 1))
                         ),
                         Exercise(
                             id = 2,
                             name = "Dumbbell Curl",
-                            weightLogs = listOf(WeightLogs(id = 2, weight = 10f))
+                            weightLogs = listOf(WeightLog(id = 2, weight = 10f, exerciseId = 2))
                         ),
                         Exercise(
                             id = 3,
                             name = "Hammer Curl",
-                            weightLogs = listOf(WeightLogs(id = 3, weight = 12.5f))
+                            weightLogs = listOf(WeightLog(id = 3, weight = 12.5f, exerciseId = 3))
                         )
                     )
                 ),
-                MuscleGroupsWithExercises(
+                MuscleWithExercises(
                     id = 2,
                     muscleName = "Triceps",
                     exercises = listOf(
                         Exercise(
                             id = 4,
                             name = "Tricep Pushdown",
-                            weightLogs = listOf(WeightLogs(id = 4, weight = 20f))
+                            weightLogs = listOf(WeightLog(id = 4, weight = 20f, exerciseId = 4))
                         ),
                         Exercise(
                             id = 5,
                             name = "Overhead Extension",
-                            weightLogs = listOf(WeightLogs(id = 5, weight = 8f))
+                            weightLogs = listOf(WeightLog(id = 5, weight = 8f, exerciseId = 5))
                         )
                     )
                 ),
-                MuscleGroupsWithExercises(
+                MuscleWithExercises(
                     id = 3,
                     muscleName = "Chest",
                     exercises = listOf(
                         Exercise(
                             id = 6,
                             name = "Bench Press",
-                            weightLogs = listOf(WeightLogs(id = 6, weight = 60f))
+                            weightLogs = listOf(WeightLog(id = 6, weight = 60f, exerciseId = 6))
                         ),
                         Exercise(
                             id = 7,
                             name = "Incline Press",
-                            weightLogs = listOf(WeightLogs(id = 7, weight = 50f))
+                            weightLogs = listOf(WeightLog(id = 7, weight = 50f, exerciseId = 7))
                         ),
                         Exercise(
                             id = 8,
                             name = "Chest Fly",
-                            weightLogs = listOf(WeightLogs(id = 8, weight = 15f))
+                            weightLogs = listOf(WeightLog(id = 8, weight = 15f, exerciseId = 8))
                         )
                     )
                 ),
-                MuscleGroupsWithExercises(
+                MuscleWithExercises(
                     id = 4,
                     muscleName = "Shoulders",
                     exercises = emptyList()
@@ -329,7 +315,7 @@ private fun WorkoutListPreview() {
                 MuscleGroup(id = 3, name = "Chest"),
                 MuscleGroup(id = 4, name = "Shoulders")
             ),
-            selectedMuscleIds = setOf(1L, 3L), // Preview with multiple selections
+            selectedMuscleIds = setOf(1L, 3L),
             expandedState = remember { mutableStateMapOf(1L to true) }
         )
     }
@@ -343,7 +329,7 @@ private fun ExerciseItemPreview() {
             exercise = Exercise(
                 id = 1,
                 name = "Barbell Curl",
-                weightLogs = listOf(WeightLogs(id = 1, weight = 15f))
+                weightLogs = listOf(WeightLog(id = 1, weight = 15f, exerciseId = 1))
             )
         )
     }

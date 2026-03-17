@@ -2,11 +2,10 @@ package com.uhc.workouttracker.workout.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.uhc.workouttracker.muscle.data.MuscleGroup
-import com.uhc.workouttracker.muscle.domain.GetMuscleGroupsUseCase
-import com.uhc.workouttracker.workout.data.Exercise
-import com.uhc.workouttracker.workout.data.MuscleGroupsWithExercises
-import com.uhc.workouttracker.workout.domain.GetExercisesUseCase
+import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
+import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
+import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
+import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,37 +14,21 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// Shared data store for exercise editing
-object ExerciseEditStore {
-    private val _selectedExercise = MutableStateFlow<Exercise?>(null)
-    val selectedExercise = _selectedExercise.asStateFlow()
-    
-    fun setExercise(exercise: Exercise?) {
-        _selectedExercise.value = exercise
-    }
-}
-
 class ExerciseListViewModel(
-    private val getExercisesUseCase: GetExercisesUseCase,
-    getMuscleGroupsUseCase: GetMuscleGroupsUseCase
+    private val exerciseRepository: ExerciseRepository,
+    muscleGroupRepository: MuscleGroupRepository
 ) : ViewModel() {
 
-    val muscles: StateFlow<List<MuscleGroup>> = getMuscleGroupsUseCase()
+    val muscles: StateFlow<List<MuscleGroup>> = muscleGroupRepository.observeMuscleGroups()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _exercisesGroupedByMuscle =
-        MutableStateFlow<List<MuscleGroupsWithExercises>>(emptyList())
+        MutableStateFlow<List<MuscleWithExercises>>(emptyList())
 
-    // Selected muscle filters state - using a Set to store multiple selections
     private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMuscleIds = _selectedMuscleIds.asStateFlow()
 
-    fun selectExerciseForEdit(exercise: Exercise) {
-        ExerciseEditStore.setExercise(exercise)
-    }
-
-    // Filtered exercises based on selected muscles
-    val filteredExercises: StateFlow<List<MuscleGroupsWithExercises>> = combine(
+    val filteredExercises: StateFlow<List<MuscleWithExercises>> = combine(
         _selectedMuscleIds,
         _exercisesGroupedByMuscle
     ) { selectedIds, exercises ->
@@ -54,21 +37,18 @@ class ExerciseListViewModel(
         } else {
             exercises.filter { it.id in selectedIds }
         }
-    }
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun fetchExercises() {
         viewModelScope.launch {
-            _exercisesGroupedByMuscle.value = getExercisesUseCase()
+            _exercisesGroupedByMuscle.value = exerciseRepository.getExercisesGroupedByMuscle()
         }
     }
 
     fun selectMuscleFilter(muscleId: Long?) {
         if (muscleId == null) {
-            // Clear all selections when "All" is clicked
             _selectedMuscleIds.value = emptySet()
         } else {
-            // Toggle the selection: add if not present, remove if already selected
             _selectedMuscleIds.value = _selectedMuscleIds.value.toMutableSet().apply {
                 if (muscleId in this) {
                     remove(muscleId)

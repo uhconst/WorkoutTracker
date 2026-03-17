@@ -1,17 +1,13 @@
 package com.uhc.workouttracker.di
 
-import com.uhc.workouttracker.authentication.data.AuthApi
-import com.uhc.workouttracker.authentication.data.AuthApiImpl
+import com.uhc.workouttracker.authentication.data.repository.AuthRepositoryImpl
+import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import com.uhc.workouttracker.authentication.presentation.LoginViewModel
-import com.uhc.workouttracker.muscle.domain.DeleteMuscleGroupUseCase
-import com.uhc.workouttracker.muscle.domain.GetMuscleGroupsUseCase
-import com.uhc.workouttracker.muscle.domain.SetMuscleGroupUseCase
+import com.uhc.workouttracker.muscle.data.repository.MuscleGroupRepositoryImpl
+import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel
-import com.uhc.workouttracker.workout.domain.GetExerciseByIdUseCase
-import com.uhc.workouttracker.workout.domain.GetExercisesUseCase
-import com.uhc.workouttracker.workout.domain.GetWeightLogsUseCase
-import com.uhc.workouttracker.workout.domain.SaveExerciseUseCase
-import com.uhc.workouttracker.workout.domain.UpdateExerciseUseCase
+import com.uhc.workouttracker.workout.data.repository.ExerciseRepositoryImpl
+import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import com.uhc.workouttracker.workout.presentation.AddExerciseViewModel
 import com.uhc.workouttracker.workout.presentation.ExerciseListViewModel
 import io.github.jan.supabase.auth.Auth
@@ -22,17 +18,9 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val dataModule = module {
-    single<AuthApi> { AuthApiImpl(get()) }
-}
-val domainModule = module {
-    factory { DeleteMuscleGroupUseCase(get()) }
-    factory { GetMuscleGroupsUseCase(get()) }
-    factory { SetMuscleGroupUseCase(get()) }
-    factory { GetExercisesUseCase(get()) }
-    factory { GetExerciseByIdUseCase(get()) }
-    factory { GetWeightLogsUseCase(get()) }
-    factory { UpdateExerciseUseCase(get()) }
-    factory { SaveExerciseUseCase(get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get()) }
+    single<MuscleGroupRepository> { MuscleGroupRepositoryImpl(get()) }
+    single<ExerciseRepository> { ExerciseRepositoryImpl(get()) }
 }
 
 val viewModelModule = module {

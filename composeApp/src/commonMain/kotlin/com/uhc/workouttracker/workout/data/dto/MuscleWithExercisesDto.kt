@@ -1,12 +1,12 @@
-package com.uhc.workouttracker.workout.data
+package com.uhc.workouttracker.workout.data.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MuscleGroupsWithExercises (
+data class MuscleWithExercisesDto(
     val id: Long,
     @SerialName("name")
     val muscleName: String,
-    val exercises: List<Exercise>? = null
+    val exercises: List<ExerciseDto>? = null
 )

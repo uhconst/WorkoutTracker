@@ -34,10 +34,10 @@ import com.uhc.workouttracker.authentication.presentation.components.OTPDialog
 import com.uhc.workouttracker.authentication.presentation.components.OTPDialogState
 import com.uhc.workouttracker.authentication.presentation.components.PasswordField
 import com.uhc.workouttracker.authentication.presentation.components.PasswordRecoveryDialog
+import com.uhc.workouttracker.authentication.domain.model.AuthState
 import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import io.github.jan.supabase.auth.providers.Google
-import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.compose.auth.ui.ProviderButtonContent
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
 import org.koin.compose.viewmodel.koinViewModel
@@ -52,7 +52,7 @@ fun LoginScreen() {
     val sessionStatus by viewModel.sessionStatus.collectAsState()
 
     LaunchedEffect(sessionStatus) {
-        if (sessionStatus is SessionStatus.Authenticated) {
+        if (sessionStatus is AuthState.Authenticated) {
             navController?.navigate(NavRoute.WorkoutListDestination)
         }
     }
