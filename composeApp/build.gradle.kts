@@ -34,6 +34,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.play.services.wearable)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
