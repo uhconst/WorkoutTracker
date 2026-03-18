@@ -10,7 +10,9 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.uhc.workouttracker.wear"
+        // Must match the phone app's applicationId — the Wearable Data Layer only
+        // syncs between apps with the same package name on both devices.
+        applicationId = "com.uhc.workouttracker"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

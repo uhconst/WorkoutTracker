@@ -1,6 +1,7 @@
 package com.uhc.workouttracker
 
 import android.app.Application
+import android.util.Log
 import com.uhc.workouttracker.di.initKoin
 import com.uhc.workouttracker.wear.WearSessionSync
 import io.github.jan.supabase.SupabaseClient
@@ -24,23 +25,29 @@ class WorkoutTrackerApplication : Application() {
 
     private fun launchWearSessionSync() {
         applicationScope.launch {
+            Log.d("WearSync", "Application: starting sessionStatus observer")
             val supabase = GlobalContext.get().get<SupabaseClient>()
             supabase.auth.sessionStatus.collect { status ->
+                Log.d("WearSync", "Application: sessionStatus changed → $status")
                 when (status) {
                     is SessionStatus.Authenticated -> {
                         val session = supabase.auth.currentSessionOrNull()
                         if (session != null) {
+                            Log.d("WearSync", "Application: authenticated, pushing session")
                             WearSessionSync.pushSession(
                                 this@WorkoutTrackerApplication,
                                 session.accessToken,
                                 session.refreshToken
                             )
+                        } else {
+                            Log.w("WearSync", "Application: Authenticated but currentSessionOrNull() is null")
                         }
                     }
                     is SessionStatus.NotAuthenticated -> {
+                        Log.d("WearSync", "Application: not authenticated, clearing session")
                         WearSessionSync.clearSession(this@WorkoutTrackerApplication)
                     }
-                    else -> Unit
+                    else -> Log.d("WearSync", "Application: intermediate status, no action")
                 }
             }
         }

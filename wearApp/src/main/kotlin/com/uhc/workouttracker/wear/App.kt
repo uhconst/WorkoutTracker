@@ -1,5 +1,6 @@
 package com.uhc.workouttracker.wear
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,8 @@ import com.uhc.workouttracker.wear.theme.WearTheme
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
+private const val TAG = "WearApp"
+
 @Composable
 fun WearApp() {
     val sessionRepo: WearSessionRepository = koinInject()
@@ -32,8 +35,34 @@ fun WearApp() {
     val coroutineScope = rememberCoroutineScope()
     var startDest by remember { mutableStateOf<String?>(null) }
 
+    // Initial session check on startup
     LaunchedEffect(Unit) {
-        startDest = if (sessionRepo.readSession() != null) "workouts" else "notpaired"
+        Log.d(TAG, "LaunchedEffect: checking for stored session")
+        val session = sessionRepo.readSession()
+        startDest = if (session != null) {
+            Log.d(TAG, "LaunchedEffect: session found → navigating to workouts")
+            "workouts"
+        } else {
+            Log.d(TAG, "LaunchedEffect: no session → showing notpaired")
+            "notpaired"
+        }
+    }
+
+    // While on the notpaired screen, listen for the phone pushing the session.
+    LaunchedEffect(startDest) {
+        if (startDest == "notpaired") {
+            Log.d(TAG, "LaunchedEffect(startDest): registering live session observer")
+            sessionRepo.observeSession().collect { tokens ->
+                if (tokens != null) {
+                    Log.d(TAG, "LaunchedEffect(startDest): live session received, navigating to workouts")
+                    navController.navigate("workouts") {
+                        popUpTo("notpaired") { inclusive = true }
+                    }
+                } else {
+                    Log.d(TAG, "LaunchedEffect(startDest): session cleared by phone")
+                }
+            }
+        }
     }
 
     if (startDest == null) {
@@ -59,10 +88,15 @@ fun WearApp() {
                 NotPairedScreen(
                     onRetry = {
                         coroutineScope.launch {
-                            if (sessionRepo.readSession() != null) {
+                            Log.d(TAG, "Retry tapped: re-checking session")
+                            val session = sessionRepo.readSession()
+                            if (session != null) {
+                                Log.d(TAG, "Retry: session found, navigating to workouts")
                                 navController.navigate("workouts") {
                                     popUpTo("notpaired") { inclusive = true }
                                 }
+                            } else {
+                                Log.d(TAG, "Retry: still no session")
                             }
                         }
                     }
@@ -76,7 +110,8 @@ fun WearApp() {
                 )
             }
             composable("detail/{muscleId}") { backStackEntry ->
-                val muscleId = backStackEntry.arguments?.getString("muscleId")?.toLong() ?: return@composable
+                val muscleId = backStackEntry.arguments?.getString("muscleId")?.toLong()
+                    ?: return@composable
                 ExerciseDetailScreen(muscleId = muscleId)
             }
         }
