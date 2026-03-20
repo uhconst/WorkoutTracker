@@ -11,14 +11,21 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.user.UserSession
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 private const val TAG = "WorkoutsVM"
 
 sealed class WorkoutsUiState {
     data object Loading : WorkoutsUiState()
-    data class Success(val groups: List<MuscleWithExercises>) : WorkoutsUiState()
+    data class Success(
+        val allGroups: List<MuscleWithExercises>,
+        val displayedGroups: List<MuscleWithExercises>
+    ) : WorkoutsUiState()
     data class Error(val message: String) : WorkoutsUiState()
     data object NotAuthenticated : WorkoutsUiState()
 }
@@ -29,22 +36,41 @@ class WorkoutsViewModel(
     private val supabase: SupabaseClient
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<WorkoutsUiState>(WorkoutsUiState.Loading)
-    val state: StateFlow<WorkoutsUiState> = _state
+    private val _baseState = MutableStateFlow<WorkoutsUiState>(WorkoutsUiState.Loading)
+    private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
+
+    val state: StateFlow<WorkoutsUiState> = combine(_baseState, _selectedMuscleIds) { base, selected ->
+        if (base is WorkoutsUiState.Success) {
+            base.copy(
+                displayedGroups = if (selected.isEmpty()) base.allGroups
+                                  else base.allGroups.filter { it.id in selected }
+            )
+        } else base
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WorkoutsUiState.Loading)
+
+    val selectedMuscleIds: StateFlow<Set<Long>> = _selectedMuscleIds
 
     init {
         loadData()
     }
 
+    fun toggleFilter(muscleId: Long?) {
+        _selectedMuscleIds.update { current ->
+            if (muscleId == null) emptySet()
+            else if (muscleId in current) current - muscleId
+            else current + muscleId
+        }
+    }
+
     @OptIn(ExperimentalTime::class)
     fun loadData() {
         viewModelScope.launch {
-            _state.value = WorkoutsUiState.Loading
+            _baseState.value = WorkoutsUiState.Loading
             Log.d(TAG, "loadData: reading session from Data Layer")
             val tokens = sessionRepository.readSession()
             if (tokens == null) {
                 Log.w(TAG, "loadData: no session tokens — showing NotAuthenticated")
-                _state.value = WorkoutsUiState.NotAuthenticated
+                _baseState.value = WorkoutsUiState.NotAuthenticated
                 return@launch
             }
             Log.d(TAG, "loadData: importing session into Supabase client")
@@ -63,11 +89,14 @@ class WorkoutsViewModel(
             }.fold(
                 onSuccess = { groups ->
                     Log.d(TAG, "loadData: success — ${groups.size} muscle groups")
-                    _state.value = WorkoutsUiState.Success(groups)
+                    _baseState.value = WorkoutsUiState.Success(
+                        allGroups = groups,
+                        displayedGroups = groups
+                    )
                 },
                 onFailure = { e ->
                     Log.e(TAG, "loadData: FAILED — ${e.message}", e)
-                    _state.value = WorkoutsUiState.Error(e.message ?: "Unknown error")
+                    _baseState.value = WorkoutsUiState.Error(e.message ?: "Unknown error")
                 }
             )
         }

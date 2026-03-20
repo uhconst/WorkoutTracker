@@ -7,20 +7,24 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.CircularProgressIndicator
+import androidx.wear.compose.material.CompactChip
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun WorkoutsScreen(
     onMuscleGroupClick: (Long) -> Unit,
-    viewModel: WorkoutsViewModel = koinViewModel()
+    onFilterClick: () -> Unit,
+    listState: ScalingLazyListState,
+    viewModel: WorkoutsViewModel
 ) {
     val state by viewModel.state.collectAsState()
+    val selectedMuscleIds by viewModel.selectedMuscleIds.collectAsState()
 
     when (val s = state) {
         is WorkoutsUiState.Loading -> CircularProgressIndicator()
@@ -35,16 +39,27 @@ fun WorkoutsScreen(
             style = MaterialTheme.typography.body2
         )
 
-        is WorkoutsUiState.Success -> ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(s.groups) { group ->
+        is WorkoutsUiState.Success -> ScalingLazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState
+        ) {
+            if (selectedMuscleIds.isNotEmpty()) {
+                item {
+                    CompactChip(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onFilterClick,
+                        label = { Text("← Filter (${selectedMuscleIds.size})") }
+                    )
+                }
+            }
+
+            items(s.displayedGroups) { group ->
                 Chip(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { onMuscleGroupClick(group.id) },
                     colors = ChipDefaults.primaryChipColors(),
                     label = { Text(group.muscleName) },
-                    secondaryLabel = {
-                        Text("${group.exercises.size} exercises")
-                    }
+                    secondaryLabel = { Text("${group.exercises.size} exercises") }
                 )
             }
         }
