@@ -1,11 +1,14 @@
 package com.uhc.workouttracker.wear.presentation.filter
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -36,7 +39,7 @@ fun FilterScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -45,24 +48,56 @@ fun FilterScreen(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
+        // Pinned "All" chip above the FlowRow
+        val allSelected = selectedMuscleIds.isEmpty()
+        val allChipColors by animateColorAsState(
+            targetValue = if (allSelected) MaterialTheme.colors.primary
+                          else MaterialTheme.colors.surface,
+            animationSpec = tween(200),
+            label = "allChipColor"
+        )
+        val allChipContentColors by animateColorAsState(
+            targetValue = if (allSelected) MaterialTheme.colors.onPrimary
+                          else MaterialTheme.colors.onSurface,
+            animationSpec = tween(200),
+            label = "allChipContentColor"
+        )
+        Chip(
+            modifier = Modifier
+                .fillMaxWidth(0.75f)
+                .padding(bottom = 8.dp),
+            onClick = { viewModel.toggleFilter(null) },
+            colors = ChipDefaults.chipColors(
+                backgroundColor = allChipColors,
+                contentColor = allChipContentColors
+            ),
+            label = { Text("All") }
+        )
+
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val allSelected = selectedMuscleIds.isEmpty()
-            Chip(
-                onClick = { viewModel.toggleFilter(null) },
-                colors = if (allSelected) ChipDefaults.primaryChipColors()
-                         else ChipDefaults.secondaryChipColors(),
-                label = { Text("All") }
-            )
-
             allGroups.forEach { group ->
                 val selected = group.id in selectedMuscleIds
+                val chipColors by animateColorAsState(
+                    targetValue = if (selected) MaterialTheme.colors.primary
+                                  else MaterialTheme.colors.surface,
+                    animationSpec = tween(200),
+                    label = "chipColor_${group.id}"
+                )
+                val chipContentColors by animateColorAsState(
+                    targetValue = if (selected) MaterialTheme.colors.onPrimary
+                                  else MaterialTheme.colors.onSurface,
+                    animationSpec = tween(200),
+                    label = "chipContentColor_${group.id}"
+                )
                 Chip(
                     onClick = { viewModel.toggleFilter(group.id) },
-                    colors = if (selected) ChipDefaults.primaryChipColors()
-                             else ChipDefaults.secondaryChipColors(),
+                    colors = ChipDefaults.chipColors(
+                        backgroundColor = chipColors,
+                        contentColor = chipContentColors
+                    ),
                     label = { Text(group.muscleName) }
                 )
             }

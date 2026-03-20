@@ -21,6 +21,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.util.lerp
+import kotlin.math.absoluteValue
 import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.CircularProgressIndicator
@@ -179,21 +182,36 @@ private fun WorkoutsPager(onMuscleGroupClick: (Long) -> Unit) {
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(state = pagerState) { page ->
-                when (page) {
-                    PAGE_FILTER -> FilterScreen(
-                        viewModel = viewModel,
-                        scrollState = filterScrollState
-                    )
-                    PAGE_WORKOUTS -> WorkoutsScreen(
-                        viewModel = viewModel,
-                        listState = workoutsListState,
-                        onMuscleGroupClick = onMuscleGroupClick,
-                        onFilterClick = {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(PAGE_FILTER)
-                            }
+                val pageOffset = ((pagerState.currentPage - page) +
+                    pagerState.currentPageOffsetFraction).absoluteValue
+                val scale = lerp(0.85f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+                val alpha = lerp(0.5f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            this.alpha = alpha
                         }
-                    )
+                ) {
+                    when (page) {
+                        PAGE_FILTER -> FilterScreen(
+                            viewModel = viewModel,
+                            scrollState = filterScrollState
+                        )
+                        PAGE_WORKOUTS -> WorkoutsScreen(
+                            viewModel = viewModel,
+                            listState = workoutsListState,
+                            onMuscleGroupClick = onMuscleGroupClick,
+                            onFilterClick = {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(PAGE_FILTER)
+                                }
+                            }
+                        )
+                    }
                 }
             }
 

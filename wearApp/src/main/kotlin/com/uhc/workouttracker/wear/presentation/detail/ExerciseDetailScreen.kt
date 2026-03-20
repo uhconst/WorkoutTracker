@@ -1,11 +1,16 @@
 package com.uhc.workouttracker.wear.presentation.detail
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -37,21 +42,27 @@ fun ExerciseDetailScreen(
                 style = MaterialTheme.typography.body2
             )
 
-            is ExerciseDetailUiState.Success -> ScalingLazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                state = listState
+            is ExerciseDetailUiState.Success -> AnimatedVisibility(
+                visible = true,
+                enter = slideInVertically { it / 2 } + fadeIn()
             ) {
-                items(s.exercises) { exercise ->
-                    val lastWeight = exercise.weightLogs.lastOrNull()?.weight
-                    Chip(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = {},
-                        colors = ChipDefaults.secondaryChipColors(),
-                        label = { Text(exercise.name) },
-                        secondaryLabel = {
-                            if (lastWeight != null) Text("$lastWeight kg")
-                        }
-                    )
+                ScalingLazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    items(s.exercises) { exercise ->
+                        val lastWeight = exercise.weightLogs.lastOrNull()?.weight
+                        Chip(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {},
+                            colors = ChipDefaults.secondaryChipColors(),
+                            label = { Text(exercise.name) },
+                            secondaryLabel = {
+                                if (lastWeight != null) Text("$lastWeight kg")
+                            }
+                        )
+                    }
                 }
             }
         }
