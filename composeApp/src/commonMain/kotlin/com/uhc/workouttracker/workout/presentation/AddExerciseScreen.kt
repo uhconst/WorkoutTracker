@@ -5,16 +5,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import com.uhc.workouttracker.core.ui.AnimatedButton
+import com.uhc.workouttracker.core.ui.WorkoutTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -130,7 +135,14 @@ fun AddExerciseLayout(
                         isError = muscleGroupError,
                         supportingText = if (muscleGroupError) {
                             { Text("Please select a muscle group") }
-                        } else null
+                        } else null,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.3f),
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        )
                     )
 
                     ExposedDropdownMenu(
@@ -150,7 +162,7 @@ fun AddExerciseLayout(
                     }
                 }
 
-                OutlinedTextField(
+                WorkoutTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = Theme.dimensions.spacing.medium),
@@ -159,14 +171,14 @@ fun AddExerciseLayout(
                         exerciseName = it
                         exerciseNameError = false
                     },
-                    label = { Text("Exercise Name") },
+                    label = "Exercise Name",
                     isError = exerciseNameError,
                     supportingText = if (exerciseNameError) {
                         { Text("Please enter an exercise name") }
                     } else null
                 )
 
-                OutlinedTextField(
+                WorkoutTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = Theme.dimensions.spacing.medium),
@@ -177,7 +189,7 @@ fun AddExerciseLayout(
                             weightError = false
                         }
                     },
-                    label = { Text("Weight (kg)") },
+                    label = "Weight (kg)",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     isError = weightError,
                     supportingText = if (weightError) {
@@ -186,7 +198,7 @@ fun AddExerciseLayout(
                 )
             }
 
-            Button(
+            AnimatedButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)

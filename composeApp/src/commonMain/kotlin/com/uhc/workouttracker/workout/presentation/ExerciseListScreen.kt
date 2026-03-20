@@ -1,8 +1,13 @@
 package com.uhc.workouttracker.workout.presentation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -36,6 +41,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.uhc.workouttracker.core.theme.Theme
@@ -102,7 +108,13 @@ internal fun ExerciseListLayout(
                     .padding(vertical = Theme.dimensions.spacing.small)
             ) {
                 item {
+                    val allScale by animateFloatAsState(
+                        targetValue = if (selectedMuscleIds.isEmpty()) 1.08f else 1f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "allChipScale"
+                    )
                     FilterChip(
+                        modifier = Modifier.graphicsLayer { scaleX = allScale; scaleY = allScale },
                         selected = selectedMuscleIds.isEmpty(),
                         onClick = { onMuscleSelected(null) },
                         label = { Text("All") }
@@ -110,8 +122,15 @@ internal fun ExerciseListLayout(
                 }
 
                 items(muscles) { muscle ->
+                    val isSelected = muscle.id in selectedMuscleIds
+                    val chipScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.08f else 1f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "chipScale"
+                    )
                     FilterChip(
-                        selected = muscle.id in selectedMuscleIds,
+                        modifier = Modifier.graphicsLayer { scaleX = chipScale; scaleY = chipScale },
+                        selected = isSelected,
                         onClick = { onMuscleSelected(muscle.id) },
                         label = { Text(muscle.name) }
                     )
@@ -133,7 +152,9 @@ internal fun ExerciseListLayout(
                     )
 
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .animateItem()
+                            .fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier.fillMaxWidth()
@@ -195,11 +216,26 @@ private fun ExerciseItem(
     exercise: Exercise,
     navController: NavController? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "exerciseCardScale"
+    )
+
     Card(
         modifier = Modifier
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable {
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current
+            ) {
                 navController?.navigate(NavRoute.AddExerciseDestination(exercise.id)) {
                     launchSingleTop = true
                 }

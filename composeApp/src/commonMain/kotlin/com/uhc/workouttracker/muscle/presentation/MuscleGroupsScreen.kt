@@ -1,5 +1,7 @@
 package com.uhc.workouttracker.muscle.presentation
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -23,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.uhc.workouttracker.core.ui.AnimatedButton
+import com.uhc.workouttracker.core.ui.WorkoutTextField
 import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
@@ -108,15 +111,15 @@ internal fun MuscleGroupsLayout(
             Column(
                 modifier = Modifier.padding(horizontal = Theme.dimensions.spacing.medium)
             ) {
-            OutlinedTextField(
+            WorkoutTextField(
                 value = inputText,
                 onValueChange = { inputText = it },
-                label = { Text(if (isEditing) "Edit Muscle group name" else "Add Muscle group name") },
+                label = if (isEditing) "Edit Muscle group name" else "Add Muscle group name",
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedButton(
+            AnimatedButton(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = Theme.dimensions.spacing.small),
@@ -143,15 +146,20 @@ internal fun MuscleGroupsLayout(
                     key = { it.id }
                 ) { muscle ->
                     val isCurrentlyEdited = currentlyEditedMuscle?.id == muscle.id
+                    val animatedCardColor by animateColorAsState(
+                        targetValue = if (isCurrentlyEdited)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.surface,
+                        animationSpec = tween(durationMillis = 300),
+                        label = "cardColor"
+                    )
 
                     Card(
                         modifier = Modifier
                             .animateItem()
                             .fillMaxWidth(),
-                        colors = if (isCurrentlyEdited)
-                            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                        else
-                            CardDefaults.cardColors()
+                        colors = CardDefaults.cardColors(containerColor = animatedCardColor)
                     ) {
                         Row(
                             modifier = Modifier
