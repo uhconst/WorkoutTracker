@@ -69,7 +69,7 @@ class AddExerciseLayoutTest {
                 )
             }
         }
-        composeTestRule.onNodeWithText("20.0").assertIsDisplayed()
+        composeTestRule.onNodeWithText("20.00").assertIsDisplayed()
     }
 
     @Test

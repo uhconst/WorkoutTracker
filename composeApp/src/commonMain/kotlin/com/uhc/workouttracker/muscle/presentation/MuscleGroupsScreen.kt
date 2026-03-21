@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
@@ -26,6 +27,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -90,6 +92,7 @@ internal fun MuscleGroupsLayout(
 ) {
     val haptic = LocalHapticFeedback.current
     var inputText by remember { mutableStateOf("") }
+    var muscleGroupToDelete by remember { mutableStateOf<MuscleGroup?>(null) }
 
     val isEditing = editState is EditState.Editing
     val currentlyEditedMuscle = (editState as? EditState.Editing)?.muscleGroup
@@ -199,7 +202,7 @@ internal fun MuscleGroupsLayout(
                             // Delete button (only shown when not editing)
                             if (!isCurrentlyEdited) {
                                 IconButton(
-                                    onClick = { haptic.perform(HapticType.Warning); onDeleteClick(muscle) }
+                                    onClick = { muscleGroupToDelete = muscle }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -212,6 +215,28 @@ internal fun MuscleGroupsLayout(
                     }
                 }
             }
+        }
+
+        muscleGroupToDelete?.let { muscle ->
+            AlertDialog(
+                onDismissRequest = { muscleGroupToDelete = null },
+                title = { Text("Delete Muscle Group") },
+                text = { Text("Delete \"${muscle.name}\"? All workouts linked to this muscle group will also be deleted. This cannot be undone.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        haptic.perform(HapticType.Warning)
+                        onDeleteClick(muscle)
+                        muscleGroupToDelete = null
+                    }) {
+                        Text("Delete", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { muscleGroupToDelete = null }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

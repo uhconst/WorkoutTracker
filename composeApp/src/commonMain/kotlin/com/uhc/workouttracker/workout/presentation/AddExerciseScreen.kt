@@ -100,7 +100,7 @@ fun AddExerciseLayout(
     }
     var weight by remember(exercise) {
         mutableStateOf(
-            exercise?.weightLogs?.firstOrNull()?.weight?.toString() ?: ""
+            exercise?.weightLogs?.firstOrNull()?.weight?.let { "%.2f".format(it) } ?: ""
         )
     }
     var expanded by remember { mutableStateOf(false) }
@@ -112,7 +112,7 @@ fun AddExerciseLayout(
     fun adjustWeight(current: String, delta: Double): String {
         val parsed = current.toDoubleOrNull() ?: 0.0
         val result = (parsed + delta).coerceAtLeast(0.0)
-        return if (result % 1.0 == 0.0) result.toInt().toString() else result.toBigDecimal().stripTrailingZeros().toPlainString()
+        return "%.2f".format(result)
     }
 
     val haptic = LocalHapticFeedback.current
