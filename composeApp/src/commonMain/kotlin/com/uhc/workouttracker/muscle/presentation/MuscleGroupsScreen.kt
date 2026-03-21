@@ -35,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.uhc.workouttracker.core.haptic.HapticType
+import com.uhc.workouttracker.core.haptic.LocalHapticFeedback
 import com.uhc.workouttracker.core.ui.AnimatedButton
 import com.uhc.workouttracker.core.ui.WorkoutTextField
 import com.uhc.workouttracker.core.theme.Theme
@@ -86,6 +88,7 @@ internal fun MuscleGroupsLayout(
     onCancelEditClick: () -> Unit = {},
     onDeleteClick: (MuscleGroup) -> Unit = {},
 ) {
+    val haptic = LocalHapticFeedback.current
     var inputText by remember { mutableStateOf("") }
 
     val isEditing = editState is EditState.Editing
@@ -124,6 +127,7 @@ internal fun MuscleGroupsLayout(
                     .fillMaxWidth()
                     .padding(top = Theme.dimensions.spacing.small),
                 onClick = {
+                    haptic.perform(HapticType.Confirm)
                     if (isEditing) {
                         onUpdateMuscleGroupClick(inputText)
                     } else {
@@ -195,7 +199,7 @@ internal fun MuscleGroupsLayout(
                             // Delete button (only shown when not editing)
                             if (!isCurrentlyEdited) {
                                 IconButton(
-                                    onClick = { onDeleteClick(muscle) }
+                                    onClick = { haptic.perform(HapticType.Warning); onDeleteClick(muscle) }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,

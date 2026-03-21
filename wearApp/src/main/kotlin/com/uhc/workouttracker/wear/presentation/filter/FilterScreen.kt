@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import com.uhc.workouttracker.wear.core.haptic.HapticType
+import com.uhc.workouttracker.wear.core.haptic.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Chip
@@ -30,6 +32,7 @@ fun FilterScreen(
     viewModel: WorkoutsViewModel,
     scrollState: ScrollState
 ) {
+    val haptic = LocalHapticFeedback.current
     val state by viewModel.state.collectAsState()
     val selectedMuscleIds by viewModel.selectedMuscleIds.collectAsState()
 
@@ -66,7 +69,7 @@ fun FilterScreen(
             modifier = Modifier
                 .fillMaxWidth(0.75f)
                 .padding(bottom = 8.dp),
-            onClick = { viewModel.toggleFilter(null) },
+            onClick = { haptic.perform(HapticType.Selection); viewModel.toggleFilter(null) },
             colors = ChipDefaults.chipColors(
                 backgroundColor = allChipColors,
                 contentColor = allChipContentColors
@@ -93,7 +96,7 @@ fun FilterScreen(
                     label = "chipContentColor_${group.id}"
                 )
                 Chip(
-                    onClick = { viewModel.toggleFilter(group.id) },
+                    onClick = { haptic.perform(HapticType.Selection); viewModel.toggleFilter(group.id) },
                     colors = ChipDefaults.chipColors(
                         backgroundColor = chipColors,
                         contentColor = chipContentColors

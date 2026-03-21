@@ -44,6 +44,8 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.uhc.workouttracker.core.haptic.HapticType
+import com.uhc.workouttracker.core.haptic.LocalHapticFeedback
 import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
@@ -91,6 +93,8 @@ internal fun ExerciseListLayout(
     navController: NavController? = null,
     expandedState: SnapshotStateMap<Long, Boolean> = remember { mutableStateMapOf() }
 ) {
+    val haptic = LocalHapticFeedback.current
+
     WorkoutTrackerAppBar(
         title = "Exercises",
         drawerState = drawerState,
@@ -116,7 +120,7 @@ internal fun ExerciseListLayout(
                     FilterChip(
                         modifier = Modifier.graphicsLayer { scaleX = allScale; scaleY = allScale },
                         selected = selectedMuscleIds.isEmpty(),
-                        onClick = { onMuscleSelected(null) },
+                        onClick = { haptic.perform(HapticType.Selection); onMuscleSelected(null) },
                         label = { Text("All") }
                     )
                 }
@@ -131,7 +135,7 @@ internal fun ExerciseListLayout(
                     FilterChip(
                         modifier = Modifier.graphicsLayer { scaleX = chipScale; scaleY = chipScale },
                         selected = isSelected,
-                        onClick = { onMuscleSelected(muscle.id) },
+                        onClick = { haptic.perform(HapticType.Selection); onMuscleSelected(muscle.id) },
                         label = { Text(muscle.name) }
                     )
                 }

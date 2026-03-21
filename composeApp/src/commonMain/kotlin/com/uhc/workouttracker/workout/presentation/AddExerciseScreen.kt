@@ -2,12 +2,18 @@ package com.uhc.workouttracker.workout.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.Icon
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenuItem
@@ -30,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import com.uhc.workouttracker.core.haptic.HapticType
+import com.uhc.workouttracker.core.haptic.LocalHapticFeedback
 import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
@@ -101,6 +109,13 @@ fun AddExerciseLayout(
     var muscleGroupError by remember { mutableStateOf(false) }
     var weightError by remember { mutableStateOf(false) }
 
+    fun adjustWeight(current: String, delta: Double): String {
+        val parsed = current.toDoubleOrNull() ?: 0.0
+        val result = (parsed + delta).coerceAtLeast(0.0)
+        return if (result % 1.0 == 0.0) result.toInt().toString() else result.toBigDecimal().stripTrailingZeros().toPlainString()
+    }
+
+    val haptic = LocalHapticFeedback.current
     val isEditing = exercise != null
 
     WorkoutTrackerAppBar(
@@ -178,24 +193,37 @@ fun AddExerciseLayout(
                     } else null
                 )
 
-                WorkoutTextField(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = Theme.dimensions.spacing.medium),
-                    value = weight,
-                    onValueChange = {
-                        if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                            weight = it
-                            weightError = false
-                        }
-                    },
-                    label = "Weight (kg)",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    isError = weightError,
-                    supportingText = if (weightError) {
-                        { Text("Please enter a valid weight") }
-                    } else null
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilledIconButton(onClick = { weight = adjustWeight(weight, -1.0); weightError = false; haptic.perform(HapticType.Selection) }) {
+                        Icon(Icons.Default.Remove, contentDescription = "Decrease weight")
+                    }
+                    WorkoutTextField(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = Theme.dimensions.spacing.small),
+                        value = weight,
+                        onValueChange = {
+                            if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
+                                weight = it
+                                weightError = false
+                            }
+                        },
+                        label = "Weight (kg)",
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        isError = weightError,
+                        supportingText = if (weightError) {
+                            { Text("Please enter a valid weight") }
+                        } else null
+                    )
+                    FilledIconButton(onClick = { weight = adjustWeight(weight, 1.0); weightError = false; haptic.perform(HapticType.Selection) }) {
+                        Icon(Icons.Default.Add, contentDescription = "Increase weight")
+                    }
+                }
             }
 
             AnimatedButton(
@@ -209,11 +237,14 @@ fun AddExerciseLayout(
                     weightError = weight.isBlank() || weight.toDoubleOrNull() == null
 
                     if (!exerciseNameError && !muscleGroupError && !weightError) {
+                        haptic.perform(HapticType.Confirm)
                         onSaveExercise(
                             exerciseName,
                             selectedMuscleGroup!!.id,
                             weight.toDouble()
                         )
+                    } else {
+                        haptic.perform(HapticType.Reject)
                     }
                 }
             ) {

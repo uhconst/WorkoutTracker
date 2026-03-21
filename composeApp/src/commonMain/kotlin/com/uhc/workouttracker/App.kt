@@ -29,6 +29,8 @@ import androidx.navigation.compose.rememberNavController
 import com.uhc.workouttracker.core.theme.Theme
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
+import com.uhc.workouttracker.core.haptic.LocalHapticFeedback
+import com.uhc.workouttracker.core.haptic.rememberHapticFeedback
 import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.navigation.TicketMasterNavHost
@@ -46,8 +48,12 @@ data class NavigationItem(
 @Preview
 fun App() {
     val navController: NavHostController = rememberNavController()
+    val hapticFeedback = rememberHapticFeedback()
 
-    CompositionLocalProvider(LocalNavController provides navController) {
+    CompositionLocalProvider(
+        LocalNavController provides navController,
+        LocalHapticFeedback provides hapticFeedback
+    ) {
         WorkoutTrackerTheme {
             Surface {
                 val drawerState = rememberDrawerState(DrawerValue.Closed)

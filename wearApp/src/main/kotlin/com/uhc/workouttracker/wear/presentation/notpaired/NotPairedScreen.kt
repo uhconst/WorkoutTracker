@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import com.uhc.workouttracker.wear.core.haptic.HapticType
+import com.uhc.workouttracker.wear.core.haptic.LocalHapticFeedback
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -19,6 +21,7 @@ import androidx.wear.compose.material.Text
 
 @Composable
 fun NotPairedScreen(onRetry: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -34,7 +37,7 @@ fun NotPairedScreen(onRetry: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
         Chip(
             modifier = Modifier.fillMaxWidth(),
-            onClick = onRetry,
+            onClick = { haptic.perform(HapticType.Confirm); onRetry() },
             colors = ChipDefaults.primaryChipColors(),
             label = { Text("Retry") }
         )
