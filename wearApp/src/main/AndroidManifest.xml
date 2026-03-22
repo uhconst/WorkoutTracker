@@ -7,6 +7,7 @@
     <application
         android:name=".WearApplication"
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="WorkoutTracker"
         android:theme="@android:style/Theme.DeviceDefault">
 
