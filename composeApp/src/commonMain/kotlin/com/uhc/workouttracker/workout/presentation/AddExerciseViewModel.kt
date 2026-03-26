@@ -50,7 +50,8 @@ class AddExerciseViewModel(
                     )
                 }
             }.onSuccess {
-                _saveSuccess.emit("Exercise saved")
+                val message = if (_editingExercise.value == null) "Exercise added" else "Exercise updated"
+                _saveSuccess.emit(message)
             }.onFailure {
                 _saveError.emit("Failed to save exercise. Please try again.")
             }

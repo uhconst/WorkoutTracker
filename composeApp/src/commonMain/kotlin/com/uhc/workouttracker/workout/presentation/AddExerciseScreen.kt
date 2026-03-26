@@ -23,8 +23,10 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import com.uhc.workouttracker.core.ui.AnimatedButton
 import com.uhc.workouttracker.core.ui.WorkoutTextField
 import androidx.compose.runtime.Composable
@@ -59,6 +61,8 @@ fun AddExerciseScreen(
     val muscles by viewModel.muscles.collectAsState()
     val editingExercise by viewModel.editingExercise.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val isEditing = exerciseId != null
+    var saveKey by remember { mutableStateOf(0) }
 
     LaunchedEffect(exerciseId) {
         exerciseId?.let { viewModel.setExerciseToEdit(it) }
@@ -66,8 +70,13 @@ fun AddExerciseScreen(
 
     LaunchedEffect(Unit) {
         viewModel.saveSuccess.collect { message ->
-            snackbarHostState.showSnackbar(message)
-            navController?.popBackStack()
+            if (isEditing) {
+                snackbarHostState.showSnackbar(message)
+                navController?.popBackStack()
+            } else {
+                saveKey++
+                snackbarHostState.showSnackbar(message)
+            }
         }
     }
 
@@ -80,9 +89,13 @@ fun AddExerciseScreen(
     AddExerciseLayout(
         muscleGroups = muscles,
         exercise = editingExercise,
+        saveKey = saveKey,
         onSaveExercise = { name, muscleGroupId, weight ->
             viewModel.saveExercise(name, muscleGroupId, weight)
         },
+        onViewExercises = if (!isEditing) {
+            { navController?.navigate(com.uhc.workouttracker.navigation.NavRoute.WorkoutListDestination) { launchSingleTop = true } }
+        } else null,
         drawerState = drawerState,
         snackbarHostState = snackbarHostState
     )
@@ -93,19 +106,21 @@ fun AddExerciseScreen(
 fun AddExerciseLayout(
     muscleGroups: List<MuscleGroup> = emptyList(),
     exercise: Exercise? = null,
+    saveKey: Int = 0,
     onSaveExercise: (name: String, muscleGroupId: Long, weight: Double) -> Unit = { _, _, _ -> },
+    onViewExercises: (() -> Unit)? = null,
     drawerState: DrawerState? = null,
     snackbarHostState: SnackbarHostState? = null
 ) {
-    var exerciseName by remember(exercise) { mutableStateOf(exercise?.name ?: "") }
-    var selectedMuscleGroup by remember(exercise, muscleGroups) {
+    var exerciseName by remember(exercise, saveKey) { mutableStateOf(exercise?.name ?: "") }
+    var selectedMuscleGroup by remember(exercise, muscleGroups, saveKey) {
         mutableStateOf(
             exercise?.muscleGroupId?.let { id ->
                 muscleGroups.find { it.id == id }
             }
         )
     }
-    var weight by remember(exercise) {
+    var weight by remember(exercise, saveKey) {
         mutableStateOf(
             exercise?.weightLogs?.firstOrNull()?.weight?.let { "%.2f".format(it) } ?: ""
         )
@@ -233,29 +248,42 @@ fun AddExerciseLayout(
                 }
             }
 
-            AnimatedButton(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
                     .padding(Theme.dimensions.spacing.medium),
-                onClick = {
-                    exerciseNameError = exerciseName.isBlank()
-                    muscleGroupError = selectedMuscleGroup == null
-                    weightError = weight.isBlank() || weight.toDoubleOrNull() == null
+                verticalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.small)
+            ) {
+                AnimatedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        exerciseNameError = exerciseName.isBlank()
+                        muscleGroupError = selectedMuscleGroup == null
+                        weightError = weight.isBlank() || weight.toDoubleOrNull() == null
 
-                    if (!exerciseNameError && !muscleGroupError && !weightError) {
-                        haptic.perform(HapticType.Confirm)
-                        onSaveExercise(
-                            exerciseName,
-                            selectedMuscleGroup!!.id,
-                            weight.toDouble()
-                        )
-                    } else {
-                        haptic.perform(HapticType.Reject)
+                        if (!exerciseNameError && !muscleGroupError && !weightError) {
+                            haptic.perform(HapticType.Confirm)
+                            onSaveExercise(
+                                exerciseName,
+                                selectedMuscleGroup!!.id,
+                                weight.toDouble()
+                            )
+                        } else {
+                            haptic.perform(HapticType.Reject)
+                        }
+                    }
+                ) {
+                    Text("Save")
+                }
+                if (onViewExercises != null) {
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onViewExercises
+                    ) {
+                        Text("View Exercises")
                     }
                 }
-            ) {
-                Text("Save")
             }
         }
     }

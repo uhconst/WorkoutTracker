@@ -274,7 +274,7 @@ private fun ExerciseItem(
 
                 exercise.weightLogs.lastOrNull()?.let { lastLog ->
                     Text(
-                        text = "${lastLog.weight} kg",
+                        text = "${"%.2f".format(lastLog.weight)} kg",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
