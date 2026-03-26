@@ -11,5 +11,6 @@ interface AuthRepository {
     suspend fun signOut()
     suspend fun resetPassword(email: String)
     suspend fun changePassword(newPassword: String)
+    suspend fun refreshSession()
     fun sessionStatus(): Flow<AuthState>
 }

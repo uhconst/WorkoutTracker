@@ -26,7 +26,9 @@ class MuscleGroupsViewModel(
         if (muscleName.isBlank()) return
 
         viewModelScope.launch {
-            muscleGroupRepository.addMuscleGroup(muscleName)
+            runCatching {
+                muscleGroupRepository.addMuscleGroup(muscleName)
+            }
         }
     }
 
@@ -43,14 +45,18 @@ class MuscleGroupsViewModel(
         if (currentEditState !is EditState.Editing || newName.isBlank()) return
 
         viewModelScope.launch {
-            muscleGroupRepository.updateMuscleGroup(currentEditState.muscleGroup.copy(name = newName))
+            runCatching {
+                muscleGroupRepository.updateMuscleGroup(currentEditState.muscleGroup.copy(name = newName))
+            }
             _editState.update { EditState.NotEditing }
         }
     }
 
     fun deleteMuscleGroup(muscleGroup: MuscleGroup) {
         viewModelScope.launch {
-            muscleGroupRepository.deleteMuscleGroup(muscleGroup.id)
+            runCatching {
+                muscleGroupRepository.deleteMuscleGroup(muscleGroup.id)
+            }
         }
     }
 

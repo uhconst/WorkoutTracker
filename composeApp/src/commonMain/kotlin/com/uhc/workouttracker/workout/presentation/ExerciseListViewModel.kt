@@ -2,6 +2,7 @@ package com.uhc.workouttracker.workout.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 
 class ExerciseListViewModel(
     private val exerciseRepository: ExerciseRepository,
+    private val authRepository: AuthRepository,
     muscleGroupRepository: MuscleGroupRepository
 ) : ViewModel() {
 
@@ -27,6 +29,9 @@ class ExerciseListViewModel(
 
     private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMuscleIds = _selectedMuscleIds.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error = _error.asStateFlow()
 
     val filteredExercises: StateFlow<List<MuscleWithExercises>> = combine(
         _selectedMuscleIds,
@@ -41,7 +46,15 @@ class ExerciseListViewModel(
 
     fun fetchExercises() {
         viewModelScope.launch {
-            _exercisesGroupedByMuscle.value = exerciseRepository.getExercisesGroupedByMuscle()
+            _error.value = null
+            runCatching {
+                authRepository.refreshSession()
+                exerciseRepository.getExercisesGroupedByMuscle()
+            }.onSuccess { groups ->
+                _exercisesGroupedByMuscle.value = groups
+            }.onFailure {
+                _error.value = "Failed to load exercises. Please try again."
+            }
         }
     }
 

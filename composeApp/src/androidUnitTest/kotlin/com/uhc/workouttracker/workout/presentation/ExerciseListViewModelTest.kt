@@ -1,5 +1,6 @@
 package com.uhc.workouttracker.workout.presentation
 
+import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
@@ -7,7 +8,9 @@ import com.uhc.workouttracker.workout.domain.model.WeightLog
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.Runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -16,12 +19,15 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
 class ExerciseListViewModelTest {
 
     private val exerciseRepo = mockk<ExerciseRepository>(relaxed = true)
+    private val authRepo = mockk<AuthRepository>(relaxed = true)
     private val muscleRepo = mockk<MuscleGroupRepository>(relaxed = true)
     private lateinit var vm: ExerciseListViewModel
 
@@ -34,7 +40,8 @@ class ExerciseListViewModelTest {
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { muscleRepo.observeMuscleGroups() } returns flowOf(emptyList())
-        vm = ExerciseListViewModel(exerciseRepo, muscleRepo)
+        coEvery { authRepo.refreshSession() } just Runs
+        vm = ExerciseListViewModel(exerciseRepo, authRepo, muscleRepo)
     }
 
     @After
@@ -53,10 +60,38 @@ class ExerciseListViewModelTest {
     }
 
     @Test
+    fun `error initial is null`() {
+        assertNull(vm.error.value)
+    }
+
+    @Test
     fun `fetchExercises - populates filteredExercises no filter`() = runTest {
         coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup, chestGroup)
         vm.fetchExercises()
         assertEquals(listOf(bicepsGroup, chestGroup), vm.filteredExercises.value)
+    }
+
+    @Test
+    fun `fetchExercises success - error is null`() = runTest {
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup)
+        vm.fetchExercises()
+        assertNull(vm.error.value)
+    }
+
+    @Test
+    fun `fetchExercises failure - error is set`() = runTest {
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("network error")
+        vm.fetchExercises()
+        assertNotNull(vm.error.value)
+    }
+
+    @Test
+    fun `fetchExercises failure - does not crash and keeps previous data`() = runTest {
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup)
+        vm.fetchExercises()
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("network error")
+        vm.fetchExercises()
+        assertEquals(emptyList<MuscleWithExercises>(), vm.filteredExercises.value)
     }
 
     @Test

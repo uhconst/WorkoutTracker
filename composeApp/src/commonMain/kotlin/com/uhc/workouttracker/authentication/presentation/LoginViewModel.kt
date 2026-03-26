@@ -31,7 +31,7 @@ class LoginViewModel(
             }.onSuccess {
                 alert.value = "Successfully registered! Check your E-Mail to verify your account."
             }.onFailure {
-                alert.value = "There was an error while registering: ${it.message}"
+                alert.value = "There was an error while registering. Please try again."
             }
             _isLoading.value = false
         }
@@ -65,7 +65,7 @@ class LoginViewModel(
             }.onSuccess {
                 passwordReset.value = reset
             }.onFailure {
-                alert.value = "There was an error while verifying the OTP: ${it.message}"
+                alert.value = "Invalid or expired code. Please try again."
             }
         }
     }
@@ -85,7 +85,7 @@ class LoginViewModel(
             }.onSuccess {
                 alert.value = "Password changed successfully!"
             }.onFailure {
-                alert.value = "There was an error while changing the password: ${it.message}"
+                alert.value = "There was an error while changing the password. Please try again."
             }
         }
     }

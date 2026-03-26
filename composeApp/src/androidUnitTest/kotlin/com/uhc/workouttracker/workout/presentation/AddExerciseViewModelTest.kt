@@ -116,4 +116,24 @@ class AddExerciseViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `saveExercise failure - emits to saveError not saveSuccess`() = runTest {
+        coEvery { exerciseRepo.saveExercise(any(), any(), any()) } throws RuntimeException("network error")
+        vm.saveError.test {
+            vm.saveExercise("Curl", 1L, 20.0)
+            val message = awaitItem()
+            assert(message.isNotBlank())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `saveExercise failure - does not emit to saveSuccess`() = runTest {
+        coEvery { exerciseRepo.saveExercise(any(), any(), any()) } throws RuntimeException("network error")
+        vm.saveSuccess.test {
+            vm.saveExercise("Curl", 1L, 20.0)
+            expectNoEvents()
+        }
+    }
 }

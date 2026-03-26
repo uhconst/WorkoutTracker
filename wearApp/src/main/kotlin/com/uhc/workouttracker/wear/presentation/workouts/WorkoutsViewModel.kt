@@ -1,5 +1,6 @@
 package com.uhc.workouttracker.wear.presentation.workouts
 
+import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -75,15 +76,21 @@ class WorkoutsViewModel(
             }
             Log.d(TAG, "loadData: importing session into Supabase client")
             runCatching {
+                val expiresIn = jwtExpiresIn(tokens.first)
+                Log.d(TAG, "loadData: token expiresIn=${expiresIn}s")
                 supabase.auth.importSession(
                     UserSession(
                         accessToken = tokens.first,
                         refreshToken = tokens.second,
                         tokenType = "bearer",
-                        expiresIn = 3600L
+                        expiresIn = expiresIn
                     ),
                     autoRefresh = true
                 )
+                if (expiresIn < 60L) {
+                    Log.d(TAG, "loadData: token expiring soon (${expiresIn}s), refreshing")
+                    supabase.auth.refreshCurrentSession()
+                }
                 Log.d(TAG, "loadData: session imported, fetching exercises")
                 exerciseRepository.getExercisesGroupedByMuscle()
             }.fold(
@@ -96,9 +103,24 @@ class WorkoutsViewModel(
                 },
                 onFailure = { e ->
                     Log.e(TAG, "loadData: FAILED — ${e.message}", e)
-                    _baseState.value = WorkoutsUiState.Error(e.message ?: "Unknown error")
+                    _baseState.value = WorkoutsUiState.Error("Failed to load workouts. Please try again.")
                 }
             )
+        }
+    }
+
+    private fun jwtExpiresIn(token: String): Long {
+        return try {
+            val payload = token.split(".")[1]
+            val decoded = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_PADDING)
+            val json = String(decoded)
+            val exp = Regex("\"exp\"\\s*:\\s*(\\d+)").find(json)?.groupValues?.get(1)?.toLong()
+                ?: return 3600L
+            val remaining = exp - System.currentTimeMillis() / 1000
+            remaining.coerceAtLeast(0L)
+        } catch (e: Exception) {
+            Log.w(TAG, "jwtExpiresIn: failed to decode token, defaulting to 3600s", e)
+            3600L
         }
     }
 }

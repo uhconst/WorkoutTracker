@@ -29,23 +29,31 @@ class AddExerciseViewModel(
     private val _saveSuccess = MutableSharedFlow<String>()
     val saveSuccess = _saveSuccess.asSharedFlow()
 
+    private val _saveError = MutableSharedFlow<String>()
+    val saveError = _saveError.asSharedFlow()
+
     fun saveExercise(name: String, muscleGroupId: Long, weight: Double) {
         viewModelScope.launch {
-            if (_editingExercise.value == null) {
-                exerciseRepository.saveExercise(
-                    name = name,
-                    muscleGroupId = muscleGroupId,
-                    weight = weight
-                )
-            } else {
-                exerciseRepository.updateExercise(
-                    id = _editingExercise.value!!.id,
-                    name = name,
-                    muscleGroupId = muscleGroupId,
-                    weight = weight
-                )
+            runCatching {
+                if (_editingExercise.value == null) {
+                    exerciseRepository.saveExercise(
+                        name = name,
+                        muscleGroupId = muscleGroupId,
+                        weight = weight
+                    )
+                } else {
+                    exerciseRepository.updateExercise(
+                        id = _editingExercise.value!!.id,
+                        name = name,
+                        muscleGroupId = muscleGroupId,
+                        weight = weight
+                    )
+                }
+            }.onSuccess {
+                _saveSuccess.emit("Exercise saved")
+            }.onFailure {
+                _saveError.emit("Failed to save exercise. Please try again.")
             }
-            _saveSuccess.emit("Exercise saved")
         }
     }
 

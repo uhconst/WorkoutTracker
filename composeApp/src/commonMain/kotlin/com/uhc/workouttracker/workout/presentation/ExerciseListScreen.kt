@@ -30,6 +30,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -67,9 +68,16 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
     val exercisesGroupedByMuscle by viewModel.filteredExercises.collectAsState()
     val muscles by viewModel.muscles.collectAsState()
     val selectedMuscleIds by viewModel.selectedMuscleIds.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.fetchExercises()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.error.collect { message ->
+            message?.let { snackbarHostState.showSnackbar(it) }
+        }
     }
 
     ExerciseListLayout(
@@ -78,7 +86,8 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
         selectedMuscleIds = selectedMuscleIds,
         onMuscleSelected = viewModel::selectMuscleFilter,
         drawerState = drawerState,
-        navController = navController
+        navController = navController,
+        snackbarHostState = snackbarHostState
     )
 }
 
@@ -91,6 +100,7 @@ internal fun ExerciseListLayout(
     onMuscleSelected: (Long?) -> Unit = {},
     drawerState: DrawerState? = null,
     navController: NavController? = null,
+    snackbarHostState: SnackbarHostState? = null,
     expandedState: SnapshotStateMap<Long, Boolean> = remember { mutableStateMapOf() }
 ) {
     val haptic = LocalHapticFeedback.current
@@ -98,6 +108,7 @@ internal fun ExerciseListLayout(
     WorkoutTrackerAppBar(
         title = "Exercises",
         drawerState = drawerState,
+        snackbarHostState = snackbarHostState
     ) { innerPadding ->
         Column(
             modifier = Modifier

@@ -54,6 +54,10 @@ class AuthRepositoryImpl(
         }
     }
 
+    override suspend fun refreshSession() {
+        auth.refreshCurrentSession()
+    }
+
     override suspend fun signOut() {
         auth.signOut()
     }
