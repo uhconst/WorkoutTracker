@@ -9,7 +9,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
@@ -210,10 +209,10 @@ fun AddExerciseLayout(
             orbVisible = false
             glowButton = true
             delay(250)
+            shineBorder = false
             fieldsVisible = true
             delay(750)
             glowButton = false
-            shineBorder = false
         }
     }
 
@@ -237,7 +236,7 @@ fun AddExerciseLayout(
         ) {
             AnimatedVisibility(
                 visible = fieldsVisible,
-                enter = expandVertically(animationSpec = tween(250), expandFrom = Alignment.CenterVertically) + fadeIn(tween(200)),
+                enter = fadeIn(tween(600)),
                 exit = shrinkVertically(animationSpec = tween(350), shrinkTowards = Alignment.CenterVertically) + fadeOut(tween(300))
             ) {
                 Column(
