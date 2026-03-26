@@ -148,4 +148,11 @@ class LoginViewModelTest {
         vm.logout()
         coVerify { repo.signOut() }
     }
+
+    @Test
+    fun `logout success - no alert set`() {
+        coEvery { repo.signOut() } just Runs
+        vm.logout()
+        assertNull(vm.alert.value)
+    }
 }

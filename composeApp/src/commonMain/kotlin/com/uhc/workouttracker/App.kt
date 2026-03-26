@@ -31,10 +31,12 @@ import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.haptic.LocalHapticFeedback
 import com.uhc.workouttracker.core.haptic.rememberHapticFeedback
+import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.navigation.TicketMasterNavHost
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 data class NavigationItem(
     val title: String,
@@ -47,6 +49,7 @@ data class NavigationItem(
 fun App() {
     val navController: NavHostController = rememberNavController()
     val hapticFeedback = rememberHapticFeedback()
+    val authRepository: AuthRepository = koinInject()
 
     CompositionLocalProvider(
         LocalNavController provides navController,
@@ -112,8 +115,11 @@ fun App() {
                             )
                         },
                         onClick = {
-                            navController.navigate(NavRoute.AuthenticationDestination) {
-                                popUpTo(navController.graph.id) { inclusive = true }
+                            scope.launch {
+                                runCatching { authRepository.signOut() }
+                                navController.navigate(NavRoute.AuthenticationDestination) {
+                                    popUpTo(navController.graph.id) { inclusive = true }
+                                }
                             }
                         }
                     )
