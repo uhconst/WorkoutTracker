@@ -10,33 +10,53 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import com.uhc.workouttracker.wear.core.haptic.HapticType
-import com.uhc.workouttracker.wear.core.haptic.LocalHapticFeedback
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.uhc.workouttracker.wear.core.haptic.HapticType
+import com.uhc.workouttracker.wear.core.haptic.LocalHapticFeedback
+import com.uhc.workouttracker.wear.domain.model.MuscleWithExercises
 import com.uhc.workouttracker.wear.presentation.workouts.WorkoutsUiState
 import com.uhc.workouttracker.wear.presentation.workouts.WorkoutsViewModel
+import com.uhc.workouttracker.wear.theme.WearTheme
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FilterScreen(
     viewModel: WorkoutsViewModel,
     scrollState: ScrollState
 ) {
-    val haptic = LocalHapticFeedback.current
     val state by viewModel.state.collectAsState()
     val selectedMuscleIds by viewModel.selectedMuscleIds.collectAsState()
 
     val allGroups = (state as? WorkoutsUiState.Success)?.allGroups ?: return
+
+    FilterLayout(
+        allGroups = allGroups,
+        selectedMuscleIds = selectedMuscleIds,
+        onToggleFilter = viewModel::toggleFilter,
+        scrollState = scrollState
+    )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun FilterLayout(
+    allGroups: List<MuscleWithExercises>,
+    selectedMuscleIds: Set<Long> = emptySet(),
+    onToggleFilter: (Long?) -> Unit = {},
+    scrollState: ScrollState = rememberScrollState()
+) {
+    val haptic = LocalHapticFeedback.current
 
     Column(
         modifier = Modifier
@@ -69,7 +89,7 @@ fun FilterScreen(
             modifier = Modifier
                 .fillMaxWidth(0.75f)
                 .padding(bottom = 8.dp),
-            onClick = { haptic.perform(HapticType.Selection); viewModel.toggleFilter(null) },
+            onClick = { haptic.perform(HapticType.Selection); onToggleFilter(null) },
             colors = ChipDefaults.chipColors(
                 backgroundColor = allChipColors,
                 contentColor = allChipContentColors
@@ -96,7 +116,7 @@ fun FilterScreen(
                     label = "chipContentColor_${group.id}"
                 )
                 Chip(
-                    onClick = { haptic.perform(HapticType.Selection); viewModel.toggleFilter(group.id) },
+                    onClick = { haptic.perform(HapticType.Selection); onToggleFilter(group.id) },
                     colors = ChipDefaults.chipColors(
                         backgroundColor = chipColors,
                         contentColor = chipContentColors
@@ -105,5 +125,34 @@ fun FilterScreen(
                 )
             }
         }
+    }
+}
+
+private val previewGroups = listOf(
+    MuscleWithExercises(id = 1, muscleName = "Biceps", exercises = emptyList()),
+    MuscleWithExercises(id = 2, muscleName = "Triceps", exercises = emptyList()),
+    MuscleWithExercises(id = 3, muscleName = "Chest", exercises = emptyList()),
+    MuscleWithExercises(id = 4, muscleName = "Back", exercises = emptyList())
+)
+
+@Preview(device = "id:wearos_small_round", showBackground = true)
+@Composable
+private fun FilterLayoutAllSelectedPreview() {
+    WearTheme {
+        FilterLayout(
+            allGroups = previewGroups,
+            selectedMuscleIds = emptySet()
+        )
+    }
+}
+
+@Preview(device = "id:wearos_small_round", showBackground = true)
+@Composable
+private fun FilterLayoutSomeSelectedPreview() {
+    WearTheme {
+        FilterLayout(
+            allGroups = previewGroups,
+            selectedMuscleIds = setOf(1L, 3L)
+        )
     }
 }

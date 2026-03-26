@@ -48,6 +48,7 @@ import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.workout.domain.model.Exercise
+import com.uhc.workouttracker.workout.domain.model.WeightLog
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -289,18 +290,37 @@ fun AddExerciseLayout(
     }
 }
 
+private val previewMuscleGroups = listOf(
+    MuscleGroup(id = 1, name = "Chest"),
+    MuscleGroup(id = 2, name = "Back"),
+    MuscleGroup(id = 3, name = "Legs")
+)
+
 @Preview
 @Composable
-fun AddExerciseScreenPreview() {
+private fun AddExercisePreview() {
     WorkoutTrackerTheme {
         AddExerciseLayout(
-            muscleGroups = listOf(
-                MuscleGroup(id = 1, name = "Chest"),
-                MuscleGroup(id = 2, name = "Back"),
-                MuscleGroup(id = 3, name = "Legs")
-            ),
+            muscleGroups = previewMuscleGroups,
             onSaveExercise = { _, _, _ -> },
-            drawerState = null
+            onViewExercises = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun AddExerciseEditPreview() {
+    WorkoutTrackerTheme {
+        AddExerciseLayout(
+            muscleGroups = previewMuscleGroups,
+            exercise = Exercise(
+                id = 1,
+                name = "Bench Press",
+                muscleGroupId = 1,
+                weightLogs = listOf(WeightLog(id = 1, weight = 80f, exerciseId = 1))
+            ),
+            onSaveExercise = { _, _, _ -> }
         )
     }
 }

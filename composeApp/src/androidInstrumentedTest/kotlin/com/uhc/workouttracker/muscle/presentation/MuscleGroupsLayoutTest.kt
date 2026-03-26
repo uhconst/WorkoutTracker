@@ -123,7 +123,19 @@ class MuscleGroupsLayoutTest {
     }
 
     @Test
-    fun `delete button calls onDeleteClick`() {
+    fun `delete confirmation dialog appears when delete button clicked`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                MuscleGroupsLayout(muscleGroups = listOf(muscle1))
+            }
+        }
+        composeTestRule.onNodeWithContentDescription("Delete Muscle Group").performClick()
+        composeTestRule.onNodeWithText("Delete Muscle Group").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Delete \"Chest\"? All workouts linked to this muscle group will also be deleted. This cannot be undone.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `delete button calls onDeleteClick after confirming dialog`() {
         var capturedMuscle: MuscleGroup? = null
         composeTestRule.setContent {
             WorkoutTrackerTheme {
@@ -134,6 +146,7 @@ class MuscleGroupsLayoutTest {
             }
         }
         composeTestRule.onNodeWithContentDescription("Delete Muscle Group").performClick()
+        composeTestRule.onNodeWithText("Delete").performClick()
         assertEquals(muscle1, capturedMuscle)
     }
 
@@ -161,5 +174,21 @@ class MuscleGroupsLayoutTest {
             }
         }
         composeTestRule.onNodeWithContentDescription("Delete Muscle Group").assertDoesNotExist()
+    }
+
+    @Test
+    fun `clicking cancel edit icon calls onCancelEditClick`() {
+        var cancelCalled = false
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                MuscleGroupsLayout(
+                    muscleGroups = listOf(muscle1),
+                    editState = EditState.Editing(muscle1),
+                    onCancelEditClick = { cancelCalled = true }
+                )
+            }
+        }
+        composeTestRule.onNodeWithContentDescription("Cancel Edit").performClick()
+        assert(cancelCalled)
     }
 }

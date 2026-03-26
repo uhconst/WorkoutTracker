@@ -374,6 +374,17 @@ private fun WorkoutListPreview() {
 
 @Preview
 @Composable
+private fun ExerciseListEmptyPreview() {
+    WorkoutTrackerTheme {
+        ExerciseListLayout(
+            exercisesGroupedByMuscle = emptyList(),
+            muscles = emptyList()
+        )
+    }
+}
+
+@Preview
+@Composable
 private fun ExerciseItemPreview() {
     WorkoutTrackerTheme {
         ExerciseItem(

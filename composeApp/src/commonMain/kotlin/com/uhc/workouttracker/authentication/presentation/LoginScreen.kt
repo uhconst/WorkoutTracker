@@ -49,22 +49,29 @@ import com.uhc.workouttracker.authentication.presentation.components.PasswordFie
 import com.uhc.workouttracker.authentication.presentation.components.PasswordRecoveryDialog
 import com.uhc.workouttracker.core.ui.AnimatedButton
 import com.uhc.workouttracker.core.ui.WorkoutTextField
+import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.compose.auth.ui.ProviderButtonContent
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(AuthUiExperimental::class)
 @Composable
 fun LoginScreen() {
     val navController = LocalNavController.current
-
     val viewModel: LoginViewModel = koinViewModel()
-
     val sessionStatus by viewModel.sessionStatus.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val loginAlert by viewModel.alert.collectAsState()
+
+    var signUp by remember { mutableStateOf(false) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var otpDialogState by remember { mutableStateOf<OTPDialogState>(OTPDialogState.Invisible) }
+    var showPasswordRecoveryDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(sessionStatus) {
         if (sessionStatus is AuthState.Authenticated) {
@@ -72,14 +79,78 @@ fun LoginScreen() {
         }
     }
 
-    var signUp by remember { mutableStateOf(false) }
-    val loginAlert by viewModel.alert.collectAsState()
-    var email by remember { mutableStateOf("") }
-    var otpDialogState by remember { mutableStateOf<OTPDialogState>(OTPDialogState.Invisible) }
-    var showPasswordRecoveryDialog by remember { mutableStateOf(false) }
-    var contentVisible by remember { mutableStateOf(false) }
+    LoginLayout(
+        email = email,
+        onEmailChange = { email = it },
+        password = password,
+        onPasswordChange = { password = it },
+        isSignUp = signUp,
+        onToggleSignUp = { signUp = !signUp },
+        isLoading = isLoading,
+        onAuthenticate = { authenticate(signUp, viewModel, email, password) },
+        onLoginWithGoogle = { viewModel.loginWithGoogle() },
+        onLoginWithOTP = { otpDialogState = OTPDialogState.Visible(email) },
+        onForgotPassword = { showPasswordRecoveryDialog = true }
+    )
 
+    if (otpDialogState is OTPDialogState.Visible) {
+        val state = (otpDialogState as OTPDialogState.Visible)
+        OTPDialog(
+            email = state.email,
+            title = state.title,
+            onDismiss = { otpDialogState = OTPDialogState.Invisible },
+            onConfirm = { otpEmail, code ->
+                viewModel.loginWithOTP(otpEmail, code, state.resetFlow)
+            }
+        )
+    }
+
+    if (showPasswordRecoveryDialog) {
+        PasswordRecoveryDialog(
+            onDismiss = { showPasswordRecoveryDialog = false },
+            onConfirm = { recoveryEmail ->
+                viewModel.resetPassword(recoveryEmail)
+                otpDialogState = OTPDialogState.Visible(
+                    title = "Password recovery",
+                    email = recoveryEmail,
+                    resetFlow = true
+                )
+            }
+        )
+    }
+
+    if (loginAlert != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.alert.value = null },
+            text = { Text(loginAlert!!) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.alert.value = null }) {
+                    Text("Ok")
+                }
+            }
+        )
+    }
+}
+
+@OptIn(AuthUiExperimental::class)
+@Composable
+internal fun LoginLayout(
+    email: String = "",
+    onEmailChange: (String) -> Unit = {},
+    password: String = "",
+    onPasswordChange: (String) -> Unit = {},
+    isSignUp: Boolean = false,
+    onToggleSignUp: () -> Unit = {},
+    isLoading: Boolean = false,
+    onAuthenticate: () -> Unit = {},
+    onLoginWithGoogle: () -> Unit = {},
+    onLoginWithOTP: () -> Unit = {},
+    onForgotPassword: () -> Unit = {}
+) {
+    var contentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { contentVisible = true }
+
+    val passwordFocus = remember { FocusRequester() }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -95,7 +166,6 @@ fun LoginScreen() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // App name header
                 Text(
                     text = "Workout Tracker",
                     style = MaterialTheme.typography.displaySmall,
@@ -108,11 +178,9 @@ fun LoginScreen() {
                 )
                 Spacer(modifier = Modifier.height(32.dp))
 
-                var password by remember { mutableStateOf("") }
-                val passwordFocus = remember { FocusRequester() }
                 WorkoutTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = onEmailChange,
                     singleLine = true,
                     label = "E-Mail",
                     keyboardOptions = KeyboardOptions(
@@ -125,19 +193,17 @@ fun LoginScreen() {
                 )
                 PasswordField(
                     password = password,
-                    onPasswordChanged = { password = it },
+                    onPasswordChanged = onPasswordChange,
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(passwordFocus)
                         .padding(top = 10.dp),
                     imeAction = ImeAction.Done,
-                    keyboardActions = KeyboardActions(onDone = {
-                        authenticate(signUp, viewModel, email, password)
-                    }),
+                    keyboardActions = KeyboardActions(onDone = { onAuthenticate() }),
                 )
 
                 AnimatedButton(
-                    onClick = { authenticate(signUp, viewModel, email, password) },
+                    onClick = onAuthenticate,
                     modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     enabled = email.isNotBlank() && password.isNotBlank() && !isLoading
                 ) {
@@ -145,31 +211,29 @@ fun LoginScreen() {
                         CircularProgressIndicator()
                     } else {
                         AnimatedContent(
-                            targetState = signUp,
+                            targetState = isSignUp,
                             transitionSpec = {
                                 fadeIn(tween(200)) + slideInVertically { -it } togetherWith
                                     fadeOut(tween(200)) + slideOutVertically { it }
                             },
                             label = "loginRegisterText"
-                        ) { isSignUp ->
-                            Text(if (isSignUp) "Register" else "Login")
+                        ) { isSignUpState ->
+                            Text(if (isSignUpState) "Register" else "Login")
                         }
                     }
                 }
 
                 OutlinedButton(
-                    onClick = { viewModel.loginWithGoogle() },
+                    onClick = onLoginWithGoogle,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     ProviderButtonContent(
                         Google,
-                        text = if (signUp) "Sign Up with Google" else "Login with Google"
+                        text = if (isSignUp) "Sign Up with Google" else "Login with Google"
                     )
                 }
 
-                TextButton(
-                    onClick = { otpDialogState = OTPDialogState.Visible(email) }
-                ) {
+                TextButton(onClick = onLoginWithOTP) {
                     Text("Login with an OTP")
                 }
             }
@@ -182,64 +246,52 @@ fun LoginScreen() {
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextButton(onClick = { signUp = !signUp }) {
+            TextButton(onClick = onToggleSignUp) {
                 AnimatedContent(
-                    targetState = signUp,
+                    targetState = isSignUp,
                     transitionSpec = {
                         fadeIn(tween(200)) togetherWith fadeOut(tween(200))
                     },
                     label = "toggleModeText"
-                ) { isSignUp ->
-                    Text(if (isSignUp) "Already have an account? Login" else "Not registered? Register")
+                ) { isSignUpState ->
+                    Text(if (isSignUpState) "Already have an account? Login" else "Not registered? Register")
                 }
             }
-            TextButton(onClick = { showPasswordRecoveryDialog = true }) {
+            TextButton(onClick = onForgotPassword) {
                 Text("Forgot password?")
             }
         }
     }
+}
 
-    if (otpDialogState is OTPDialogState.Visible) {
-        val state = (otpDialogState as OTPDialogState.Visible)
-        OTPDialog(
-            email = state.email,
-            title = state.title,
-            onDismiss = { otpDialogState = OTPDialogState.Invisible },
-            onConfirm = { email, code ->
-                viewModel.loginWithOTP(email, code, state.resetFlow)
-            }
+@Preview
+@Composable
+private fun LoginPreview() {
+    WorkoutTrackerTheme {
+        LoginLayout()
+    }
+}
+
+@Preview
+@Composable
+private fun LoginSignUpPreview() {
+    WorkoutTrackerTheme {
+        LoginLayout(
+            email = "user@example.com",
+            password = "password",
+            isSignUp = true
         )
     }
+}
 
-    if (showPasswordRecoveryDialog) {
-        PasswordRecoveryDialog(
-            onDismiss = { showPasswordRecoveryDialog = false },
-            onConfirm = { email ->
-                viewModel.resetPassword(email)
-                otpDialogState = OTPDialogState.Visible(
-                    title = "Password recovery",
-                    email = email,
-                    resetFlow = true
-                )
-            }
-        )
-    }
-
-    if (loginAlert != null) {
-        AlertDialog(
-            onDismissRequest = {
-                viewModel.alert.value = null
-            },
-            text = {
-                Text(loginAlert!!)
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.alert.value = null
-                }) {
-                    Text("Ok")
-                }
-            }
+@Preview
+@Composable
+private fun LoginLoadingPreview() {
+    WorkoutTrackerTheme {
+        LoginLayout(
+            email = "user@example.com",
+            password = "password",
+            isLoading = true
         )
     }
 }

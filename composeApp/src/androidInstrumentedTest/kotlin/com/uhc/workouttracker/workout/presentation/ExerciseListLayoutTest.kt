@@ -104,7 +104,7 @@ class ExerciseListLayoutTest {
                 )
             }
         }
-        composeTestRule.onNodeWithText("20.0 kg").assertIsDisplayed()
+        composeTestRule.onNodeWithText("20.00 kg").assertIsDisplayed()
     }
 
     @Test
@@ -148,5 +148,19 @@ class ExerciseListLayoutTest {
         }
         composeTestRule.onNodeWithText("Biceps").performClick()
         assertEquals(1L, capturedId)
+    }
+
+    @Test
+    fun `clicking expanded exercise item does not crash`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                ExerciseListLayout(
+                    exercisesGroupedByMuscle = listOf(bicepsGroup),
+                    expandedState = mutableStateMapOf(1L to true)
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Bench Press").performClick()
+        // No crash expected — navController is null so navigate is a no-op
     }
 }

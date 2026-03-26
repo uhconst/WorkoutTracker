@@ -1,9 +1,14 @@
 package com.uhc.workouttracker.workout.presentation
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.uhc.workouttracker.core.theme.WorkoutTrackerTheme
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.workout.domain.model.Exercise
@@ -159,6 +164,51 @@ class AddExerciseLayoutTest {
         }
         composeTestRule.onNodeWithText("Muscle Group").performClick()
         composeTestRule.onNodeWithText("Back").assertIsDisplayed()
+    }
+
+    @Test
+    fun `View Exercises button shown when onViewExercises provided`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = emptyList(),
+                    onViewExercises = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("View Exercises").assertIsDisplayed()
+    }
+
+    @Test
+    fun `View Exercises button hidden when onViewExercises is null`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = emptyList(),
+                    onViewExercises = null
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("View Exercises").assertDoesNotExist()
+    }
+
+    @Test
+    fun `exercise name field cleared when saveKey increments`() {
+        var saveKey by mutableStateOf(0)
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = listOf(chest),
+                    exercise = null,
+                    saveKey = saveKey
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Exercise Name").performClick()
+        composeTestRule.onNodeWithText("Exercise Name").performTextInput("Squats")
+        composeTestRule.onNodeWithText("Squats").assertIsDisplayed()
+        composeTestRule.runOnUiThread { saveKey++ }
+        composeTestRule.onNodeWithText("Squats").assertDoesNotExist()
     }
 
     @Test

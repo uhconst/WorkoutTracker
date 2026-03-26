@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.tooling.preview.Preview
 import com.uhc.workouttracker.wear.core.haptic.HapticType
 import com.uhc.workouttracker.wear.core.haptic.LocalHapticFeedback
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.uhc.workouttracker.wear.theme.WearTheme
 
 @Composable
 fun NotPairedScreen(onRetry: () -> Unit) {
@@ -41,5 +43,13 @@ fun NotPairedScreen(onRetry: () -> Unit) {
             colors = ChipDefaults.primaryChipColors(),
             label = { Text("Retry") }
         )
+    }
+}
+
+@Preview(device = "id:wearos_small_round", showBackground = true)
+@Composable
+private fun NotPairedScreenPreview() {
+    WearTheme {
+        NotPairedScreen(onRetry = {})
     }
 }

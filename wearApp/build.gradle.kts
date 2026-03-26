@@ -15,8 +15,8 @@ android {
         applicationId = "com.uhc.workouttracker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "0.1.0"
     }
 
     buildFeatures {
@@ -48,4 +48,5 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtimeCompose)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }

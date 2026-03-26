@@ -35,7 +35,6 @@ import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.navigation.TicketMasterNavHost
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 data class NavigationItem(
     val title: String,
@@ -45,7 +44,6 @@ data class NavigationItem(
 )
 
 @Composable
-@Preview
 fun App() {
     val navController: NavHostController = rememberNavController()
     val hapticFeedback = rememberHapticFeedback()
