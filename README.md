@@ -201,6 +201,21 @@ This section documents conventions that should be followed when using AI assista
 - Never display raw exception messages, Supabase URLs, or HTTP headers to the user
 - The `apikey` header (anon key) is acceptable in the app bundle but must not appear in logs or UI
 
+### Compile check
+
+**Always verify the build compiles before finishing any code change:**
+
+```bash
+./gradlew :composeApp:compileDebugKotlin   # fast — Kotlin only, no APK
+./gradlew :wearApp:compileDebugKotlin      # if wearApp was touched
+```
+
+Common pitfalls:
+- `animateColorAsState` is in `androidx.compose.animation` — **not** `androidx.compose.animation.core`
+- `animateFloatAsState` is in `androidx.compose.animation.core`
+- `border` (Modifier) is in `androidx.compose.foundation`
+- Prefer checking an existing file that already imports the same symbol rather than guessing the package
+
 ### No CI/CD yet
 
 There is no automated pipeline. Before merging, manually run:

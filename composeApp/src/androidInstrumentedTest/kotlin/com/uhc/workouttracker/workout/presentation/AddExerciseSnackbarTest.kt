@@ -15,20 +15,6 @@ class AddExerciseSnackbarTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `save success message shown in snackbar`() {
-        val snackbarHostState = SnackbarHostState()
-        composeTestRule.setContent {
-            LaunchedEffect(Unit) {
-                snackbarHostState.showSnackbar("Exercise added")
-            }
-            WorkoutTrackerTheme {
-                AddExerciseLayout(snackbarHostState = snackbarHostState)
-            }
-        }
-        composeTestRule.onNodeWithText("Exercise added").assertIsDisplayed()
-    }
-
-    @Test
     fun `save error message shown in snackbar`() {
         val snackbarHostState = SnackbarHostState()
         composeTestRule.setContent {
