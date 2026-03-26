@@ -12,6 +12,7 @@ A Kotlin Multiplatform workout tracking app for **Android**, **iOS**, and **Wear
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
 - [Testing](#testing)
+- [Versioning](#versioning)
 - [AI / Claude Code Guidelines](#ai--claude-code-guidelines)
 
 ---
@@ -147,6 +148,29 @@ The watch app is read-only. It has no login screen. The phone pushes the Supabas
 - Use `Turbine` for testing `Flow` / `StateFlow` emissions
 - UI tests assert on visible text and semantics, not on internal state
 - Use `StandardTestDispatcher` + `advanceUntilIdle()` for coroutine tests
+
+---
+
+## Versioning
+
+Both `composeApp` (phone/iOS) and `wearApp` (Wear OS) share the same `applicationId` (`com.uhc.workouttracker`). This means the Google Play Store treats them as the same application family, and **their `versionCode` values must never be equal** — Play requires each uploaded APK/AAB to have a strictly unique `versionCode` within an app.
+
+### Rules
+
+- `versionCode` must be a positive integer that increases with every release.
+- `versionCode` values across `composeApp` and `wearApp` must not collide.
+- `versionName` is a human-readable string (e.g. `"0.2.0"`) and follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
+  - Bump `PATCH` for bug fixes.
+  - Bump `MINOR` for new features (backwards-compatible).
+  - Bump `MAJOR` for breaking changes.
+- `composeApp` and `wearApp` are versioned independently — their `versionName` strings do not need to match.
+
+### Current versions
+
+| Module | `versionCode` | `versionName` |
+|---|---|---|
+| `composeApp` (phone + iOS) | 4 | 0.2.0 |
+| `wearApp` (Wear OS) | 3 | 0.1.0 |
 
 ---
 

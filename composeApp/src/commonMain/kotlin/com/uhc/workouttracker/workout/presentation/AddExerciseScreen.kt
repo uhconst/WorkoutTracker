@@ -73,6 +73,7 @@ import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.WeightLog
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -183,6 +184,8 @@ fun AddExerciseLayout(
         label = "buttonContainerColor"
     )
 
+    val haptic = LocalHapticFeedback.current
+
     LaunchedEffect(saveKey) {
         if (saveKey > 0) {
             shineBorder = true
@@ -190,6 +193,19 @@ fun AddExerciseLayout(
             fieldsVisible = false
             orbVisible = true
             orbProgress.snapTo(0f)
+
+            launch {
+                haptic.perform(HapticType.ImpactLight)
+                delay(125)
+                haptic.perform(HapticType.ImpactLight)
+                delay(125)
+                haptic.perform(HapticType.ImpactMedium)
+                delay(125)
+                haptic.perform(HapticType.ImpactMedium)
+                delay(125)
+                haptic.perform(HapticType.ImpactStrong)
+            }
+
             orbProgress.animateTo(1f, animationSpec = tween(500, easing = FastOutSlowInEasing))
             orbVisible = false
             glowButton = true
@@ -207,7 +223,6 @@ fun AddExerciseLayout(
         return "%.2f".format(result)
     }
 
-    val haptic = LocalHapticFeedback.current
     val isEditing = exercise != null
 
     WorkoutTrackerAppBar(
