@@ -1,18 +1,26 @@
 package com.uhc.workouttracker.wear.data.repository
 
 import android.content.Context
+import android.util.Base64
 import android.util.Log
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.user.UserSession
 import kotlin.coroutines.resume
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-class WearSessionRepositoryImpl(private val context: Context) : WearSessionRepository {
+class WearSessionRepositoryImpl(
+    private val context: Context,
+    private val supabase: SupabaseClient
+) : WearSessionRepository {
 
     companion object {
         const val SESSION_PATH = "/supabase_session"
@@ -86,6 +94,51 @@ class WearSessionRepositoryImpl(private val context: Context) : WearSessionRepos
         awaitClose {
             Log.d(TAG, "observeSession: removing listener")
             Wearable.getDataClient(context).removeListener(listener)
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    override suspend fun importAndValidateSession(): Boolean {
+        val tokens = readSession() ?: run {
+            Log.w(TAG, "importAndValidateSession: no session tokens found")
+            return false
+        }
+        return runCatching {
+            val expiresIn = jwtExpiresIn(tokens.first)
+            Log.d(TAG, "importAndValidateSession: token expiresIn=${expiresIn}s")
+            supabase.auth.importSession(
+                UserSession(
+                    accessToken = tokens.first,
+                    refreshToken = tokens.second,
+                    tokenType = "bearer",
+                    expiresIn = expiresIn
+                ),
+                autoRefresh = false
+            )
+            if (expiresIn == 0L) {
+                Log.d(TAG, "importAndValidateSession: token expired, refreshing")
+                supabase.auth.refreshCurrentSession()
+            }
+            Log.d(TAG, "importAndValidateSession: session ready")
+            true
+        }.getOrElse { e ->
+            Log.e(TAG, "importAndValidateSession: FAILED — ${e.message}", e)
+            false
+        }
+    }
+
+    private fun jwtExpiresIn(token: String): Long {
+        return try {
+            val payload = token.split(".")[1]
+            val decoded = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_PADDING)
+            val json = String(decoded)
+            val exp = Regex("\"exp\"\\s*:\\s*(\\d+)").find(json)?.groupValues?.get(1)?.toLong()
+                ?: return 3600L
+            val remaining = exp - System.currentTimeMillis() / 1000
+            remaining.coerceAtLeast(0L)
+        } catch (e: Exception) {
+            Log.w(TAG, "jwtExpiresIn: failed to decode token, defaulting to 3600s", e)
+            3600L
         }
     }
 }

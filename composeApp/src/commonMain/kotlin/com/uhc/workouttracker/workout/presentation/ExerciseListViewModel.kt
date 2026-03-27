@@ -52,7 +52,9 @@ class ExerciseListViewModel(
                 authRepository.refreshSession()
                 exerciseRepository.getExercisesGroupedByMuscle()
             }.onFailure {
-                _error.value = "Failed to load exercises. Please try again."
+                if (_exercisesGroupedByMuscle.value.isEmpty()) {
+                    _error.value = "Failed to load exercises. Please try again."
+                }
             }
         }
     }

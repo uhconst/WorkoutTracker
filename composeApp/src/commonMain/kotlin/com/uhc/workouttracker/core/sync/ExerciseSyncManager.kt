@@ -12,6 +12,8 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @OptIn(SupabaseExperimental::class)
@@ -24,11 +26,17 @@ class ExerciseSyncManager(
 
     init {
         applicationScope.launch {
-            client.from("muscle_groups")
-                .selectAsFlow(MuscleGroupDto::id)
-                .collect { dtos ->
-                    muscleGroupLocal.replaceAll(dtos.map { it.toDomain() })
+            while (isActive) {
+                runCatching {
+                    client.from("muscle_groups")
+                        .selectAsFlow(MuscleGroupDto::id)
+                        .collect { dtos ->
+                            muscleGroupLocal.replaceAll(dtos.map { it.toDomain() })
+                        }
+                }.onFailure {
+                    delay(10_000L)
                 }
+            }
         }
     }
 

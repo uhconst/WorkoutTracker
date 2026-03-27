@@ -1,16 +1,11 @@
 package com.uhc.workouttracker.wear.presentation.workouts
 
-import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uhc.workouttracker.wear.data.repository.WearExerciseRepository
 import com.uhc.workouttracker.wear.data.repository.WearSessionRepository
 import com.uhc.workouttracker.wear.domain.model.MuscleWithExercises
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.user.UserSession
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,8 +28,7 @@ sealed class WorkoutsUiState {
 
 class WorkoutsViewModel(
     private val exerciseRepository: WearExerciseRepository,
-    private val sessionRepository: WearSessionRepository,
-    private val supabase: SupabaseClient
+    private val sessionRepository: WearSessionRepository
 ) : ViewModel() {
 
     private val _baseState = MutableStateFlow<WorkoutsUiState>(WorkoutsUiState.Loading)
@@ -63,35 +57,18 @@ class WorkoutsViewModel(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     fun loadData() {
         viewModelScope.launch {
             _baseState.value = WorkoutsUiState.Loading
-            Log.d(TAG, "loadData: reading session from Data Layer")
-            val tokens = sessionRepository.readSession()
-            if (tokens == null) {
-                Log.w(TAG, "loadData: no session tokens — showing NotAuthenticated")
+            Log.d(TAG, "loadData: importing session")
+            val sessionReady = sessionRepository.importAndValidateSession()
+            if (!sessionReady) {
+                Log.w(TAG, "loadData: session not available — showing NotAuthenticated")
                 _baseState.value = WorkoutsUiState.NotAuthenticated
                 return@launch
             }
-            Log.d(TAG, "loadData: importing session into Supabase client")
+            Log.d(TAG, "loadData: session ready, fetching exercises")
             runCatching {
-                val expiresIn = jwtExpiresIn(tokens.first)
-                Log.d(TAG, "loadData: token expiresIn=${expiresIn}s")
-                supabase.auth.importSession(
-                    UserSession(
-                        accessToken = tokens.first,
-                        refreshToken = tokens.second,
-                        tokenType = "bearer",
-                        expiresIn = expiresIn
-                    ),
-                    autoRefresh = true
-                )
-                if (expiresIn < 60L) {
-                    Log.d(TAG, "loadData: token expiring soon (${expiresIn}s), refreshing")
-                    supabase.auth.refreshCurrentSession()
-                }
-                Log.d(TAG, "loadData: session imported, fetching exercises")
                 exerciseRepository.getExercisesGroupedByMuscle()
             }.fold(
                 onSuccess = { groups ->
@@ -106,21 +83,6 @@ class WorkoutsViewModel(
                     _baseState.value = WorkoutsUiState.Error("Failed to load workouts. Please try again.")
                 }
             )
-        }
-    }
-
-    private fun jwtExpiresIn(token: String): Long {
-        return try {
-            val payload = token.split(".")[1]
-            val decoded = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_PADDING)
-            val json = String(decoded)
-            val exp = Regex("\"exp\"\\s*:\\s*(\\d+)").find(json)?.groupValues?.get(1)?.toLong()
-                ?: return 3600L
-            val remaining = exp - System.currentTimeMillis() / 1000
-            remaining.coerceAtLeast(0L)
-        } catch (e: Exception) {
-            Log.w(TAG, "jwtExpiresIn: failed to decode token, defaulting to 3600s", e)
-            3600L
         }
     }
 }

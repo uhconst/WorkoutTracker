@@ -23,7 +23,7 @@ val wearModule = module {
             install(Postgrest)
         }
     }
-    single<WearSessionRepository> { WearSessionRepositoryImpl(androidContext()) }
+    single<WearSessionRepository> { WearSessionRepositoryImpl(androidContext(), get()) }
     single<WearExerciseRepository> { WearExerciseRepositoryImpl(get()) }
     viewModelOf(::WorkoutsViewModel)
     viewModelOf(::ExerciseDetailViewModel)

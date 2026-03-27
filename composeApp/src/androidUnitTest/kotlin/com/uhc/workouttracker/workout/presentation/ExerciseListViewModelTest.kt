@@ -145,4 +145,20 @@ class ExerciseListViewModelTest {
         exercisesFlow.value = listOf(bicepsGroup, chestGroup)
         assertEquals(listOf(bicepsGroup), vm.filteredExercises.value)
     }
+
+    @Test
+    fun `fetchExercises failure with non-empty cache - error is null`() = runTest {
+        exercisesFlow.value = listOf(bicepsGroup)
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("offline")
+        vm.fetchExercises()
+        assertNull(vm.error.value)
+    }
+
+    @Test
+    fun `fetchExercises failure with empty cache - error is set`() = runTest {
+        exercisesFlow.value = emptyList()
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("offline")
+        vm.fetchExercises()
+        assertNotNull(vm.error.value)
+    }
 }
