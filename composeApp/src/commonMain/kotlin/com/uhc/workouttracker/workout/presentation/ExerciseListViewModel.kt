@@ -24,8 +24,9 @@ class ExerciseListViewModel(
     val muscles: StateFlow<List<MuscleGroup>> = muscleGroupRepository.observeMuscleGroups()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val _exercisesGroupedByMuscle =
-        MutableStateFlow<List<MuscleWithExercises>>(emptyList())
+    private val _exercisesGroupedByMuscle: StateFlow<List<MuscleWithExercises>> =
+        exerciseRepository.observeExercisesGroupedByMuscle()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMuscleIds = _selectedMuscleIds.asStateFlow()
@@ -50,8 +51,6 @@ class ExerciseListViewModel(
             runCatching {
                 authRepository.refreshSession()
                 exerciseRepository.getExercisesGroupedByMuscle()
-            }.onSuccess { groups ->
-                _exercisesGroupedByMuscle.value = groups
             }.onFailure {
                 _error.value = "Failed to load exercises. Please try again."
             }

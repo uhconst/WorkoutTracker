@@ -12,6 +12,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.Runs
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -36,10 +37,14 @@ class ExerciseListViewModelTest {
     private val bicepsGroup = MuscleWithExercises(id = 1L, muscleName = "Biceps", exercises = listOf(exercise1))
     private val chestGroup  = MuscleWithExercises(id = 2L, muscleName = "Chest",  exercises = emptyList())
 
+    // Backing flow used to simulate Room/cache emissions
+    private val exercisesFlow = MutableStateFlow<List<MuscleWithExercises>>(emptyList())
+
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { muscleRepo.observeMuscleGroups() } returns flowOf(emptyList())
+        every { exerciseRepo.observeExercisesGroupedByMuscle() } returns exercisesFlow
         coEvery { authRepo.refreshSession() } just Runs
         vm = ExerciseListViewModel(exerciseRepo, authRepo, muscleRepo)
     }
@@ -65,15 +70,13 @@ class ExerciseListViewModelTest {
     }
 
     @Test
-    fun `fetchExercises - populates filteredExercises no filter`() = runTest {
-        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup, chestGroup)
-        vm.fetchExercises()
+    fun `filteredExercises reflects data from observe flow`() = runTest {
+        exercisesFlow.value = listOf(bicepsGroup, chestGroup)
         assertEquals(listOf(bicepsGroup, chestGroup), vm.filteredExercises.value)
     }
 
     @Test
     fun `fetchExercises success - error is null`() = runTest {
-        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup)
         vm.fetchExercises()
         assertNull(vm.error.value)
     }
@@ -86,12 +89,11 @@ class ExerciseListViewModelTest {
     }
 
     @Test
-    fun `fetchExercises failure - does not crash and keeps previous data`() = runTest {
-        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup)
-        vm.fetchExercises()
+    fun `fetchExercises failure - does not clear existing data from flow`() = runTest {
+        exercisesFlow.value = listOf(bicepsGroup)
         coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("network error")
         vm.fetchExercises()
-        assertEquals(emptyList<MuscleWithExercises>(), vm.filteredExercises.value)
+        assertEquals(listOf(bicepsGroup), vm.filteredExercises.value)
     }
 
     @Test
@@ -123,27 +125,24 @@ class ExerciseListViewModelTest {
     }
 
     @Test
-    fun `filteredExercises filters by selected muscle after load`() = runTest {
-        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup, chestGroup)
-        vm.fetchExercises()
+    fun `filteredExercises filters by selected muscle`() = runTest {
+        exercisesFlow.value = listOf(bicepsGroup, chestGroup)
         vm.selectMuscleFilter(1L)
         assertEquals(listOf(bicepsGroup), vm.filteredExercises.value)
     }
 
     @Test
     fun `filteredExercises shows all when filter cleared after being set`() = runTest {
-        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup, chestGroup)
-        vm.fetchExercises()
+        exercisesFlow.value = listOf(bicepsGroup, chestGroup)
         vm.selectMuscleFilter(1L)
         vm.selectMuscleFilter(null)
         assertEquals(listOf(bicepsGroup, chestGroup), vm.filteredExercises.value)
     }
 
     @Test
-    fun `filteredExercises filters before load - correct result after fetch`() = runTest {
-        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } returns listOf(bicepsGroup, chestGroup)
+    fun `filteredExercises filters correctly when data arrives after filter set`() = runTest {
         vm.selectMuscleFilter(1L)
-        vm.fetchExercises()
+        exercisesFlow.value = listOf(bicepsGroup, chestGroup)
         assertEquals(listOf(bicepsGroup), vm.filteredExercises.value)
     }
 }

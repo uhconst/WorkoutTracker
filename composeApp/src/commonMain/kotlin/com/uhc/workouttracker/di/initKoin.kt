@@ -1,13 +1,11 @@
 package com.uhc.workouttracker.di
 
+import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 
-fun initKoin() {
+fun initKoin(additionalSetup: KoinApplication.() -> Unit = {}) {
     startKoin {
-        modules(
-            dataModule,
-            viewModelModule,
-            supabaseModule,
-        )
+        additionalSetup()
+        modules(dataModule, viewModelModule, supabaseModule)
     }
 }

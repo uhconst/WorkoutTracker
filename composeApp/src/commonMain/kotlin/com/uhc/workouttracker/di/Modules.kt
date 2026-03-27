@@ -3,11 +3,7 @@ package com.uhc.workouttracker.di
 import com.uhc.workouttracker.authentication.data.repository.AuthRepositoryImpl
 import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import com.uhc.workouttracker.authentication.presentation.LoginViewModel
-import com.uhc.workouttracker.muscle.data.repository.MuscleGroupRepositoryImpl
-import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel
-import com.uhc.workouttracker.workout.data.repository.ExerciseRepositoryImpl
-import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import com.uhc.workouttracker.workout.presentation.AddExerciseViewModel
 import com.uhc.workouttracker.workout.presentation.ExerciseListViewModel
 import io.github.jan.supabase.auth.Auth
@@ -19,8 +15,6 @@ import org.koin.dsl.module
 
 val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get()) }
-    single<MuscleGroupRepository> { MuscleGroupRepositoryImpl(get()) }
-    single<ExerciseRepository> { ExerciseRepositoryImpl(get()) }
 }
 
 val viewModelModule = module {

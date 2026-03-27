@@ -2,7 +2,10 @@ package com.uhc.workouttracker
 
 import android.app.Application
 import android.util.Log
-import com.uhc.workouttracker.di.initKoin
+import com.uhc.workouttracker.di.androidDataModule
+import com.uhc.workouttracker.di.dataModule
+import com.uhc.workouttracker.di.supabaseModule
+import com.uhc.workouttracker.di.viewModelModule
 import com.uhc.workouttracker.wear.WearSessionSync
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -11,7 +14,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
+import org.koin.core.context.startKoin
 
 class WorkoutTrackerApplication : Application() {
 
@@ -19,7 +24,10 @@ class WorkoutTrackerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        initKoin()
+        startKoin {
+            androidContext(this@WorkoutTrackerApplication)
+            modules(androidDataModule, dataModule, viewModelModule, supabaseModule)
+        }
         launchWearSessionSync()
     }
 

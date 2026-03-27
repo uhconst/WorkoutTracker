@@ -18,7 +18,8 @@ androidx-ui-tooling = "1.9.4"
 materialIconsCore = "1.7.3"
 navigationCompose = "2.9.1"
 supabase = "3.2.6"
-ksp = "2.1.20-2.0.0"
+ksp = "2.2.21-2.0.5"
+room = "2.7.1"
 mockk = "1.13.13"
 turbine = "1.2.0"
 coroutinesTest = "1.9.0"
@@ -62,6 +63,8 @@ wear-compose-material = { module = "androidx.wear.compose:compose-material", ver
 wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version.ref = "wear-compose" }
 wear-compose-navigation = { module = "androidx.wear.compose:compose-navigation", version.ref = "wear-compose" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 play-services-wearable = { module = "com.google.android.gms:play-services-wearable", version.ref = "play-services-wearable" }
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "supabase" }
 

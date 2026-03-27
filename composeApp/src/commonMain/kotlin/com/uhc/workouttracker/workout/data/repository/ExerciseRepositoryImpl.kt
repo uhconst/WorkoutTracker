@@ -11,6 +11,9 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -18,6 +21,11 @@ import kotlinx.serialization.Serializable
 class ExerciseRepositoryImpl(
     private val client: SupabaseClient
 ) : ExerciseRepository {
+
+    private val _cache = MutableStateFlow<List<MuscleWithExercises>>(emptyList())
+
+    override fun observeExercisesGroupedByMuscle(): Flow<List<MuscleWithExercises>> =
+        _cache.asStateFlow()
 
     override suspend fun getExercisesGroupedByMuscle(): List<MuscleWithExercises> {
         val columns = Columns.raw(
@@ -35,10 +43,12 @@ class ExerciseRepositoryImpl(
     )
 """.trimIndent()
         )
-        return client.from("muscle_groups")
+        val result = client.from("muscle_groups")
             .select(columns = columns)
             .decodeList<MuscleWithExercisesDto>()
             .map { it.toDomain() }
+        _cache.value = result
+        return result
     }
 
     override suspend fun getExerciseById(id: Long): Exercise? {
@@ -73,6 +83,7 @@ class ExerciseRepositoryImpl(
         inserted.id?.let {
             client.from("weight_logs").insert(WeightLogDto(weight = weight.toFloat(), exerciseId = it))
         }
+        getExercisesGroupedByMuscle()
     }
 
     override suspend fun updateExercise(id: Long, name: String, muscleGroupId: Long, weight: Double) {
@@ -84,6 +95,7 @@ class ExerciseRepositoryImpl(
         updated.id?.let {
             client.from("weight_logs").insert(WeightLogDto(weight = weight.toFloat(), exerciseId = it))
         }
+        getExercisesGroupedByMuscle()
     }
 }
 

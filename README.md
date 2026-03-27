@@ -35,8 +35,8 @@ WorkoutTracker/
 ├── composeApp/                  # Shared phone app (Android + iOS)
 │   └── src/
 │       ├── commonMain/          # Shared UI, ViewModels, Domain, Repositories
-│       ├── androidMain/         # Android entry point, WearSessionSync, Haptic impl
-│       └── iosMain/             # iOS entry point, Haptic impl
+│       ├── androidMain/         # Android entry point, Room DB, SyncManager, WearSessionSync, Haptic impl
+│       └── iosMain/             # iOS entry point, in-memory data sources, Haptic impl
 ├── wearApp/                     # Wear OS companion (Android only)
 │   └── src/main/kotlin/
 │       ├── data/                # DTOs, WearSessionRepository, WearExerciseRepository
@@ -58,6 +58,7 @@ WorkoutTracker/
 | UI | Compose Multiplatform | 1.9.3 |
 | Wear UI | Wear Compose (Material) | 1.4.1 |
 | Backend | Supabase (Auth, PostgREST, Realtime) | 3.2.6 |
+| Local cache | Room (Android only) | 2.7.1 |
 | HTTP | Ktor (OkHttp / Darwin) | 3.3.2 |
 | DI | Koin | 4.1.1 |
 | Navigation | Jetpack Navigation Compose (type-safe) | 2.9.1 |
@@ -72,27 +73,47 @@ WorkoutTracker/
 
 ## Architecture
 
-The app follows **Clean Architecture** with **MVVM** in the presentation layer, organized **by feature**.
+The app follows **Clean Architecture** with **MVVM** in the presentation layer, organized **by feature**. Room acts as an offline-first local cache on Android; ViewModels always read from Room, never directly from the network.
 
 ```
-Presentation  →  Domain (interfaces)  →  Data (implementations)  →  Supabase
-(ViewModel)       (Repository)            (RepositoryImpl)
+Presentation  →  Domain (interfaces)  →  Data (implementations)
+(ViewModel)       (Repository)            ├── Room (local cache, Android)   ← single source of truth for reads
+                                          └── Supabase (remote)             ← writes + background sync
 ```
+
+**Data flow:**
+- **Reads:** ViewModel observes a `Flow` from the Room DAO. Data appears instantly on launch from cache.
+- **Sync (muscle groups):** `ExerciseSyncManager` subscribes to Supabase Realtime; each emission is written to Room, which then notifies the ViewModel.
+- **Sync (exercises):** `fetchExercises()` triggers a Supabase PostgREST fetch → full transactional replace in Room → Room Flow emits new data.
+- **Writes:** Always go to Supabase first, then `syncExercises()` refreshes the Room cache.
+- **iOS:** No Room. Muscle groups use Supabase Realtime directly; exercises use an in-memory `MutableStateFlow` that is populated on each fetch.
 
 ### Layer responsibilities
 
 | Layer | Contains | Rules |
 |---|---|---|
-| `presentation/` | Composable screens, ViewModels, UI state | Depends only on domain interfaces. Never imports Supabase directly. |
+| `presentation/` | Composable screens, ViewModels, UI state | Depends only on domain interfaces. Never imports Supabase or Room directly. |
 | `domain/` | Repository interfaces, domain models | No Android/platform imports. Pure Kotlin. |
-| `data/` | Repository implementations, DTOs, mappers | Knows about Supabase. Maps DTOs → domain models before returning. |
+| `data/` | Repository implementations, DTOs, mappers, `LocalDataSource` interfaces | Knows about Supabase. Maps DTOs → domain models before returning. |
+| `core/db/` (androidMain) | Room entities, DAOs, `WorkoutTrackerDatabase`, entity↔domain mappers | Android-only. Never imported from `commonMain`. |
+| `core/sync/` | `SyncManager` interface (commonMain) + `ExerciseSyncManager` (androidMain) | Orchestrates Supabase → Room writes. Runs in application-scoped coroutine. |
 
 ### Feature modules (under `commonMain`)
 
 - `authentication/` — Login, signup, OTP, password reset
-- `workout/` — Exercise list, add/edit exercise
-- `muscle/` — Muscle group management
-- `core/` — Shared UI components, theme, haptic feedback abstraction, navigation
+- `workout/` — Exercise list, add/edit exercise; `data/local/ExerciseLocalDataSource` interface
+- `muscle/` — Muscle group management; `data/local/MuscleGroupLocalDataSource` interface
+- `core/` — Shared UI components, theme, haptic feedback, navigation, `SyncManager` interface
+
+### Platform-specific DI
+
+Repository bindings are split by platform so each target gets the right implementation:
+
+| Module | Provides |
+|---|---|
+| `androidDataModule` (androidMain) | Room DB, DAOs, `RoomMuscleGroupLocalDataSource`, `RoomExerciseLocalDataSource`, `ExerciseSyncManager`, Room-backed repository impls |
+| `iosDataModule` (iosMain) | Original Supabase Realtime `MuscleGroupRepositoryImpl`, `ExerciseRepositoryImpl` with in-memory cache |
+| `dataModule` (commonMain) | `AuthRepository` only (platform-neutral) |
 
 ### State management
 
@@ -195,14 +216,17 @@ This section documents conventions that should be followed when using AI assista
 ### Adding a new feature (checklist)
 
 1. Create domain model in `feature/domain/model/`
-2. Create repository interface in `feature/domain/repository/`
-3. Create DTO + mapper in `feature/data/`
-4. Implement repository in `feature/data/repository/`
-5. Register the repository binding in `di/Modules.kt`
-6. Create ViewModel with `runCatching` error handling
-7. Register ViewModel with `viewModelOf(::MyViewModel)` in `di/Modules.kt`
-8. Create screen composable; add route to `NavRoute.kt` and `NavHost`
-9. Write ViewModel unit test
+2. Create repository interface in `feature/domain/repository/` — expose `Flow<T>` for reads, `suspend` for writes
+3. Create DTO + mapper in `feature/data/` (commonMain)
+4. Create `LocalDataSource` interface in `feature/data/local/` (commonMain)
+5. Create Room entity, DAO, and `Room*LocalDataSource` implementation in `androidMain`
+6. Add entity to `WorkoutTrackerDatabase` and increment the schema version
+7. Implement the Room-backed repository in `androidMain/feature/data/repository/`; bind it in `androidDataModule`
+8. For iOS: implement a Supabase-direct or in-memory repository; bind it in `iosDataModule`
+9. Create ViewModel with `runCatching` error handling; observe Room Flows via `stateIn()`
+10. Register ViewModel with `viewModelOf(::MyViewModel)` in `di/Modules.kt`
+11. Create screen composable; add route to `NavRoute.kt` and `NavHost`
+12. Write ViewModel unit test — mock `observeX()` with a `MutableStateFlow` for full emission control
 
 ### What NOT to do
 
@@ -210,7 +234,8 @@ This section documents conventions that should be followed when using AI assista
 - Do not use `mutableStateOf` in ViewModels — use `MutableStateFlow`
 - Do not hardcode user-facing strings in `onFailure` blocks with exception details
 - Do not skip `runCatching` on any suspend function that calls a remote API
-- Do not add `Room` or local database without a discussion — the app intentionally uses Supabase as the single source of truth
+- Do not import Room annotations or `WorkoutTrackerDatabase` from `commonMain` — Room is Android-only and lives exclusively in `androidMain`
+- Do not expose Room entities (`*Entity`) or relation POJOs outside of `androidMain` — domain models are the shared contract
 
 ### Wear OS rules
 
