@@ -190,7 +190,7 @@ Both `composeApp` (phone/iOS) and `wearApp` (Wear OS) share the same `applicatio
 
 | Module | `versionCode` | `versionName` |
 |---|---|---|
-| `composeApp` (phone + iOS) | 5 | 0.3.0 |
+| `composeApp` (phone + iOS) | 6 | 0.4.0 |
 | `wearApp` (Wear OS) | 3 | 0.1.0 |
 
 ---
