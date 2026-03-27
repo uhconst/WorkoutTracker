@@ -73,12 +73,12 @@ WorkoutTracker/
 
 ## Architecture
 
-The app follows **Clean Architecture** with **MVVM** in the presentation layer, organized **by feature**. Room acts as an offline-first local cache on Android; ViewModels always read from Room, never directly from the network.
+The app follows **Clean Architecture** with **MVVM** in the presentation layer, organized **by feature**. Room 2.7.x (KMP) acts as an offline-first local cache on **both Android and iOS**; ViewModels always read from Room, never directly from the network.
 
 ```
 Presentation  →  Domain (interfaces)  →  Data (implementations)
-(ViewModel)       (Repository)            ├── Room (local cache, Android)   ← single source of truth for reads
-                                          └── Supabase (remote)             ← writes + background sync
+(ViewModel)       (Repository)            ├── Room (local cache, commonMain)  ← single source of truth for reads
+                                          └── Supabase (remote)              ← writes + background sync
 ```
 
 **Data flow:**
@@ -86,7 +86,7 @@ Presentation  →  Domain (interfaces)  →  Data (implementations)
 - **Sync (muscle groups):** `ExerciseSyncManager` subscribes to Supabase Realtime; each emission is written to Room, which then notifies the ViewModel.
 - **Sync (exercises):** `fetchExercises()` triggers a Supabase PostgREST fetch → full transactional replace in Room → Room Flow emits new data.
 - **Writes:** Always go to Supabase first, then `syncExercises()` refreshes the Room cache.
-- **iOS:** No Room. Muscle groups use Supabase Realtime directly; exercises use an in-memory `MutableStateFlow` that is populated on each fetch.
+- **iOS:** Uses the same Room code as Android. The database is constructed with `BundledSQLiteDriver` (from `androidx.sqlite:sqlite-bundled`) in `iosDatabaseModule`.
 
 ### Layer responsibilities
 
@@ -95,8 +95,8 @@ Presentation  →  Domain (interfaces)  →  Data (implementations)
 | `presentation/` | Composable screens, ViewModels, UI state | Depends only on domain interfaces. Never imports Supabase or Room directly. |
 | `domain/` | Repository interfaces, domain models | No Android/platform imports. Pure Kotlin. |
 | `data/` | Repository implementations, DTOs, mappers, `LocalDataSource` interfaces | Knows about Supabase. Maps DTOs → domain models before returning. |
-| `core/db/` (androidMain) | Room entities, DAOs, `WorkoutTrackerDatabase`, entity↔domain mappers | Android-only. Never imported from `commonMain`. |
-| `core/sync/` | `SyncManager` interface (commonMain) + `ExerciseSyncManager` (androidMain) | Orchestrates Supabase → Room writes. Runs in application-scoped coroutine. |
+| `core/db/` (commonMain) | Room entities, DAOs, `WorkoutTrackerDatabase`, entity↔domain mappers | Shared across Android + iOS via Room KMP. |
+| `core/sync/` | `SyncManager` interface + `ExerciseSyncManager` (both commonMain) | Orchestrates Supabase → Room writes. Runs in application-scoped coroutine. |
 
 ### Feature modules (under `commonMain`)
 
@@ -107,13 +107,13 @@ Presentation  →  Domain (interfaces)  →  Data (implementations)
 
 ### Platform-specific DI
 
-Repository bindings are split by platform so each target gets the right implementation:
+Only database *construction* differs by platform. All repository bindings are shared in `dataModule`:
 
 | Module | Provides |
 |---|---|
-| `androidDataModule` (androidMain) | Room DB, DAOs, `RoomMuscleGroupLocalDataSource`, `RoomExerciseLocalDataSource`, `ExerciseSyncManager`, Room-backed repository impls |
-| `iosDataModule` (iosMain) | Original Supabase Realtime `MuscleGroupRepositoryImpl`, `ExerciseRepositoryImpl` with in-memory cache |
-| `dataModule` (commonMain) | `AuthRepository` only (platform-neutral) |
+| `androidDatabaseModule` (androidMain) | `WorkoutTrackerDatabase` via `Room.databaseBuilder` with Android `Context` |
+| `iosDatabaseModule` (iosMain) | `WorkoutTrackerDatabase` via `Room.databaseBuilder` with `BundledSQLiteDriver` |
+| `dataModule` (commonMain) | `AuthRepository`, DAOs, `LocalDataSource` impls, `SyncManager`, all repository impls |
 
 ### State management
 
@@ -234,8 +234,8 @@ This section documents conventions that should be followed when using AI assista
 - Do not use `mutableStateOf` in ViewModels — use `MutableStateFlow`
 - Do not hardcode user-facing strings in `onFailure` blocks with exception details
 - Do not skip `runCatching` on any suspend function that calls a remote API
-- Do not import Room annotations or `WorkoutTrackerDatabase` from `commonMain` — Room is Android-only and lives exclusively in `androidMain`
-- Do not expose Room entities (`*Entity`) or relation POJOs outside of `androidMain` — domain models are the shared contract
+- Do not import Room annotations or `WorkoutTrackerDatabase` from `androidMain` — all Room code lives in `commonMain`
+- Do not expose Room entities (`*Entity`) or relation POJOs outside of `commonMain/core/db/` — domain models are the shared contract
 
 ### Wear OS rules
 

@@ -1,7 +1,6 @@
 package com.uhc.workouttracker.workout.data.repository
 
 import com.uhc.workouttracker.core.sync.SyncManager
-import com.uhc.workouttracker.workout.data.dto.ExerciseDto
 import com.uhc.workouttracker.workout.data.dto.WeightLogDto
 import com.uhc.workouttracker.workout.data.local.ExerciseLocalDataSource
 import com.uhc.workouttracker.workout.domain.model.Exercise

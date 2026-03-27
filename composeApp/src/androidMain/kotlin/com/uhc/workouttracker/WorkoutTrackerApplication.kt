@@ -2,7 +2,7 @@ package com.uhc.workouttracker
 
 import android.app.Application
 import android.util.Log
-import com.uhc.workouttracker.di.androidDataModule
+import com.uhc.workouttracker.di.androidDatabaseModule
 import com.uhc.workouttracker.di.dataModule
 import com.uhc.workouttracker.di.supabaseModule
 import com.uhc.workouttracker.di.viewModelModule
@@ -26,7 +26,7 @@ class WorkoutTrackerApplication : Application() {
         super.onCreate()
         startKoin {
             androidContext(this@WorkoutTrackerApplication)
-            modules(androidDataModule, dataModule, viewModelModule, supabaseModule)
+            modules(androidDatabaseModule, dataModule, viewModelModule, supabaseModule)
         }
         launchWearSessionSync()
     }

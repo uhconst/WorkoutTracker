@@ -1,12 +1,16 @@
 package com.uhc.workouttracker.di
 
-import com.uhc.workouttracker.muscle.data.repository.MuscleGroupRepositoryImpl
-import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
-import com.uhc.workouttracker.workout.data.repository.ExerciseRepositoryImpl
-import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
+import androidx.room.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.uhc.workouttracker.core.db.WorkoutTrackerDatabase
+import kotlinx.coroutines.newSingleThreadContext
 import org.koin.dsl.module
 
-val iosDataModule = module {
-    single<MuscleGroupRepository> { MuscleGroupRepositoryImpl(get()) }
-    single<ExerciseRepository> { ExerciseRepositoryImpl(get()) }
+val iosDatabaseModule = module {
+    single<WorkoutTrackerDatabase> {
+        Room.databaseBuilder<WorkoutTrackerDatabase>(name = "workout_tracker.db")
+            .setDriver(BundledSQLiteDriver())
+            .setQueryCoroutineContext(newSingleThreadContext("WorkoutTrackerDB"))
+            .build()
+    }
 }

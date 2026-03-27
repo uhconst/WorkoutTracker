@@ -35,10 +35,10 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.play.services.wearable)
-            implementation(libs.room.runtime)
             implementation(libs.koin.android)
         }
         commonMain.dependencies {
+            implementation(libs.room.runtime)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
@@ -66,6 +66,7 @@ kotlin {
         }
         nativeMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.sqlite.bundled)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -122,6 +123,9 @@ dependencies {
     debugImplementation(compose.uiTooling)
     debugImplementation(libs.compose.ui.test.manifest)
     add("kspAndroid", libs.room.compiler)
+    add("kspIosX64", libs.room.compiler)
+    add("kspIosArm64", libs.room.compiler)
+    add("kspIosSimulatorArm64", libs.room.compiler)
 }
 
 ksp {
