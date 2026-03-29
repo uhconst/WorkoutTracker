@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,13 +23,16 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -37,7 +41,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -212,7 +218,16 @@ internal fun ExerciseListLayout(
                                         muscleGroup.exercises.forEach { exercise ->
                                             ExerciseItem(
                                                 exercise = exercise,
-                                                navController = navController
+                                                onEdit = {
+                                                    navController?.navigate(NavRoute.AddExerciseDestination(exercise.id)) {
+                                                        launchSingleTop = true
+                                                    }
+                                                },
+                                                onViewGraph = {
+                                                    navController?.navigate(
+                                                        NavRoute.ExerciseProgressionGraphDestination(exercise.id, exercise.name)
+                                                    ) { launchSingleTop = true }
+                                                }
                                             )
                                         }
                                     }
@@ -229,10 +244,12 @@ internal fun ExerciseListLayout(
 @Composable
 private fun ExerciseItem(
     exercise: Exercise,
-    navController: NavController? = null
+    onEdit: () -> Unit = {},
+    onViewGraph: () -> Unit = {}
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    var showMenu by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.97f else 1f,
         animationSpec = spring(
@@ -249,29 +266,28 @@ private fun ExerciseItem(
             .padding(vertical = 4.dp)
             .clickable(
                 interactionSource = interactionSource,
-                indication = LocalIndication.current
-            ) {
-                navController?.navigate(NavRoute.AddExerciseDestination(exercise.id)) {
-                    launchSingleTop = true
-                }
-            },
+                indication = LocalIndication.current,
+                onClick = onEdit
+            ),
         shape = RoundedCornerShape(6.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Theme.dimensions.spacing.medium, vertical = Theme.dimensions.spacing.small),
+                .padding(
+                    start = Theme.dimensions.spacing.medium,
+                    end = Theme.dimensions.spacing.small,
+                    top = Theme.dimensions.spacing.small,
+                    bottom = Theme.dimensions.spacing.small
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = exercise.name,
                     style = MaterialTheme.typography.bodyLarge
                 )
-
                 exercise.weightLogs.lastOrNull()?.let { lastLog ->
                     Text(
                         text = "${"%.2f".format(lastLog.weight)} kg",
@@ -281,11 +297,28 @@ private fun ExerciseItem(
                 }
             }
 
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "View Exercise Details",
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More options",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Edit") },
+                        onClick = { showMenu = false; onEdit() }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("History") },
+                        onClick = { showMenu = false; onViewGraph() }
+                    )
+                }
+            }
         }
     }
 }

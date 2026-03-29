@@ -12,4 +12,6 @@ sealed class NavRoute {
     data object MuscleGroupsDestination: NavRoute()
     @Serializable
     data class AddExerciseDestination(val exerciseId: Long? = null): NavRoute()
+    @Serializable
+    data class ExerciseProgressionGraphDestination(val exerciseId: Long, val exerciseName: String): NavRoute()
 }

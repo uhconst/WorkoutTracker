@@ -14,7 +14,7 @@ fun MuscleGroupEntity.toDomain(): MuscleGroup = MuscleGroup(id = id, name = name
 
 fun MuscleGroup.toEntity(): MuscleGroupEntity = MuscleGroupEntity(id = id, name = name)
 
-fun WeightLogEntity.toDomain(): WeightLog = WeightLog(id = id, weight = weight, exerciseId = exerciseId)
+fun WeightLogEntity.toDomain(): WeightLog = WeightLog(id = id, weight = weight, exerciseId = exerciseId, date = date)
 
 fun ExerciseWithWeightLogs.toDomain(): Exercise = Exercise(
     id = exercise.id,
@@ -46,6 +46,6 @@ fun MuscleWithExercises.toExerciseEntities(): List<ExerciseEntity> =
 fun MuscleWithExercises.toWeightLogEntities(): List<WeightLogEntity> =
     exercises.flatMap { exercise ->
         exercise.weightLogs.map { log ->
-            WeightLogEntity(id = log.id, weight = log.weight, exerciseId = exercise.id)
+            WeightLogEntity(id = log.id, weight = log.weight, exerciseId = exercise.id, date = log.date)
         }
     }

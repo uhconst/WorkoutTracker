@@ -10,6 +10,6 @@ val androidDatabaseModule = module {
         Room.databaseBuilder<WorkoutTrackerDatabase>(
             context = androidContext(),
             name = "workout_tracker.db"
-        ).build()
+        ).addMigrations(WorkoutTrackerDatabase.MIGRATION_1_2).build()
     }
 }

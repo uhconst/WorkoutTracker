@@ -8,5 +8,7 @@ data class WeightLogDto(
     val id: Long = -1,
     val weight: Float,
     @SerialName("exercise_id")
-    val exerciseId: Long = -1
+    val exerciseId: Long = -1,
+    @SerialName("created_at")
+    val createdAt: String = ""
 )

@@ -11,6 +11,7 @@ import com.uhc.workouttracker.authentication.presentation.LoginScreen
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsScreen
 import com.uhc.workouttracker.workout.presentation.AddExerciseScreen
 import com.uhc.workouttracker.workout.presentation.ExerciseListScreen
+import com.uhc.workouttracker.workout.presentation.ExerciseProgressionGraphScreen
 
 @Composable
 fun TicketMasterNavHost(
@@ -35,6 +36,10 @@ fun TicketMasterNavHost(
         composable<NavRoute.AddExerciseDestination> { backStackEntry ->
             val args = backStackEntry.toRoute<NavRoute.AddExerciseDestination>()
             AddExerciseScreen(drawerState = drawerState, exerciseId = args.exerciseId)
+        }
+        composable<NavRoute.ExerciseProgressionGraphDestination> { backStackEntry ->
+            val args = backStackEntry.toRoute<NavRoute.ExerciseProgressionGraphDestination>()
+            ExerciseProgressionGraphScreen(exerciseId = args.exerciseId, exerciseName = args.exerciseName)
         }
     }
 }

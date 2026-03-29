@@ -7,7 +7,7 @@ import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
 import com.uhc.workouttracker.workout.domain.model.WeightLog
 
-fun WeightLogDto.toDomain() = WeightLog(id = id, weight = weight, exerciseId = exerciseId)
+fun WeightLogDto.toDomain() = WeightLog(id = id, weight = weight, exerciseId = exerciseId, date = createdAt)
 
 fun ExerciseDto.toDomain() = Exercise(
     id = id,

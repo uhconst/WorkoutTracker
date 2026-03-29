@@ -11,6 +11,7 @@ val iosDatabaseModule = module {
         Room.databaseBuilder<WorkoutTrackerDatabase>(name = "workout_tracker.db")
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(newSingleThreadContext("WorkoutTrackerDB"))
+            .addMigrations(WorkoutTrackerDatabase.MIGRATION_1_2)
             .build()
     }
 }

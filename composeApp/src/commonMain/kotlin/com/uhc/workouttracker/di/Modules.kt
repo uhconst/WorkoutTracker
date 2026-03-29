@@ -17,6 +17,7 @@ import com.uhc.workouttracker.workout.data.repository.RoomExerciseRepositoryImpl
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import com.uhc.workouttracker.workout.presentation.AddExerciseViewModel
 import com.uhc.workouttracker.workout.presentation.ExerciseListViewModel
+import com.uhc.workouttracker.workout.presentation.ExerciseProgressionGraphViewModel
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -44,6 +45,7 @@ val viewModelModule = module {
     viewModelOf(::ExerciseListViewModel)
     viewModelOf(::MuscleGroupsViewModel)
     viewModelOf(::AddExerciseViewModel)
+    viewModelOf(::ExerciseProgressionGraphViewModel)
 }
 
 val supabaseModule = module {

@@ -19,5 +19,6 @@ import androidx.room.PrimaryKey
 data class WeightLogEntity(
     @PrimaryKey val id: Long,
     val weight: Float,
-    @ColumnInfo(name = "exercise_id") val exerciseId: Long
+    @ColumnInfo(name = "exercise_id") val exerciseId: Long,
+    val date: String = ""
 )
