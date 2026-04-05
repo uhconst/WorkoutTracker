@@ -5,6 +5,9 @@ build/
 # Local configuration file (sdk path, etc)
 local.properties
 
+# iOS Supabase credentials — use SupabaseConfig.ios.kt.example as a template
+**/SupabaseConfig.ios.kt
+
 # Log/OS Files
 *.log
 

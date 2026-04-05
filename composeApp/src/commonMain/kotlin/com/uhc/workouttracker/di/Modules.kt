@@ -30,7 +30,7 @@ import org.koin.dsl.module
 
 val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get()) }
-    single<CoroutineScope> { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+    single<CoroutineScope> { CoroutineScope(SupervisorJob() + Dispatchers.IO) }
     single { get<WorkoutTrackerDatabase>().muscleGroupDao() }
     single { get<WorkoutTrackerDatabase>().exerciseDao() }
     single<MuscleGroupLocalDataSource> { RoomMuscleGroupLocalDataSource(get()) }
@@ -50,10 +50,7 @@ val viewModelModule = module {
 
 val supabaseModule = module {
     single {
-        createSupabaseClient(
-            "https://zlmutumvuenpjowstien.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpsbXV0dW12dWVucGpvd3N0aWVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2OTA5MzEsImV4cCI6MjA4OTI2NjkzMX0.MAFZl-L4bkL4F7NeHJUE5UnOGxSwRmPqOxgJ51HgptU"
-        ) {
+        createSupabaseClient(supabaseUrl, supabaseAnonKey) {
             install(Auth)
             install(Postgrest)
             install(Realtime)

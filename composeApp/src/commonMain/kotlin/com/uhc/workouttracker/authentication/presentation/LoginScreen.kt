@@ -121,10 +121,10 @@ fun LoginScreen() {
 
     if (loginAlert != null) {
         AlertDialog(
-            onDismissRequest = { viewModel.alert.value = null },
+            onDismissRequest = { viewModel.clearAlert() },
             text = { Text(loginAlert!!) },
             confirmButton = {
-                TextButton(onClick = { viewModel.alert.value = null }) {
+                TextButton(onClick = { viewModel.clearAlert() }) {
                     Text("Ok")
                 }
             }

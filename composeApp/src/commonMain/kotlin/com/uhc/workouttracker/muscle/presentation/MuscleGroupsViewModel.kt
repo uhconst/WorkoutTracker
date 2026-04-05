@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -22,12 +24,17 @@ class MuscleGroupsViewModel(
     private val _editState = MutableStateFlow<EditState>(EditState.NotEditing)
     val editState = _editState.asStateFlow()
 
+    private val _error = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val error = _error.asSharedFlow()
+
     fun addMuscleGroup(muscleName: String) {
         if (muscleName.isBlank()) return
 
         viewModelScope.launch {
             runCatching {
                 muscleGroupRepository.addMuscleGroup(muscleName)
+            }.onFailure {
+                _error.tryEmit("Failed to add muscle group. Please try again.")
             }
         }
     }
@@ -47,6 +54,8 @@ class MuscleGroupsViewModel(
         viewModelScope.launch {
             runCatching {
                 muscleGroupRepository.updateMuscleGroup(currentEditState.muscleGroup.copy(name = newName))
+            }.onFailure {
+                _error.tryEmit("Failed to update muscle group. Please try again.")
             }
             _editState.update { EditState.NotEditing }
         }
@@ -56,6 +65,8 @@ class MuscleGroupsViewModel(
         viewModelScope.launch {
             runCatching {
                 muscleGroupRepository.deleteMuscleGroup(muscleGroup.id)
+            }.onFailure {
+                _error.tryEmit("Failed to delete muscle group. Please try again.")
             }
         }
     }

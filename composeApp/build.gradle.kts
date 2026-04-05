@@ -1,5 +1,11 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+val localProperties = Properties().also { props ->
+    val file = rootProject.file("local.properties")
+    if (file.exists()) props.load(file.inputStream())
+}
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -102,15 +108,32 @@ android {
         versionCode = 6
         versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "SUPABASE_URL", "\"${localProperties["supabase.url"] ?: ""}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${localProperties["supabase.anon.key"] ?: ""}\"")
     }
+    buildFeatures { buildConfig = true }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    signingConfigs {
+        create("release") {
+            storeFile = file(project.property("KEYSTORE_PATH") as String)
+            storePassword = project.property("KEYSTORE_PASSWORD") as String
+            keyAlias = project.property("KEY_ALIAS") as String
+            keyPassword = project.property("KEY_PASSWORD") as String
+        }
+    }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {

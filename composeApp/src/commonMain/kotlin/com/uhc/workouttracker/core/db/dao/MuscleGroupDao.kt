@@ -2,6 +2,7 @@ package com.uhc.workouttracker.core.db.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.uhc.workouttracker.core.db.entity.MuscleGroupEntity
 import kotlinx.coroutines.flow.Flow
@@ -22,4 +23,10 @@ interface MuscleGroupDao {
 
     @Query("DELETE FROM muscle_groups")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceAll(groups: List<MuscleGroupEntity>) {
+        deleteAll()
+        upsertAll(groups)
+    }
 }

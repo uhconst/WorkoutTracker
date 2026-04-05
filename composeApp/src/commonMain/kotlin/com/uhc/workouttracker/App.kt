@@ -116,6 +116,8 @@ fun App() {
                         },
                         onClick = {
                             scope.launch {
+                                // Navigate regardless of sign-out result so the user is
+                                // never stuck on a screen with a broken session.
                                 runCatching { authRepository.signOut() }
                                 navController.navigate(NavRoute.AuthenticationDestination) {
                                     popUpTo(navController.graph.id) { inclusive = true }

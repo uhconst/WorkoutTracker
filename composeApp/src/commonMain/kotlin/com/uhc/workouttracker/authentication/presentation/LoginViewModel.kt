@@ -17,8 +17,11 @@ class LoginViewModel(
     val sessionStatus = authRepository.sessionStatus()
         .stateIn(viewModelScope, SharingStarted.Eagerly, AuthState.Unauthenticated)
 
-    val alert = MutableStateFlow<String?>(null)
-    val passwordReset = MutableStateFlow<Boolean>(false)
+    private val _alert = MutableStateFlow<String?>(null)
+    val alert = _alert.asStateFlow()
+
+    private val _passwordReset = MutableStateFlow<Boolean>(false)
+    val passwordReset = _passwordReset.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -29,9 +32,9 @@ class LoginViewModel(
             runCatching {
                 authRepository.signUp(email, password)
             }.onSuccess {
-                alert.value = "Successfully registered! Check your E-Mail to verify your account."
+                _alert.value = "Successfully registered! Check your E-Mail to verify your account."
             }.onFailure {
-                alert.value = "There was an error while registering. Please try again."
+                _alert.value = "There was an error while registering. Please try again."
             }
             _isLoading.value = false
         }
@@ -44,7 +47,7 @@ class LoginViewModel(
                 authRepository.signIn(email, password)
             }.onFailure {
                 it.printStackTrace()
-                alert.value = "There was an error while logging in. Check your credentials and try again."
+                _alert.value = "There was an error while logging in. Check your credentials and try again."
             }
             _isLoading.value = false
         }
@@ -54,6 +57,8 @@ class LoginViewModel(
         viewModelScope.launch {
             runCatching {
                 authRepository.signInWithGoogle()
+            }.onFailure {
+                _alert.value = "Google sign-in failed. Please try again."
             }
         }
     }
@@ -63,9 +68,9 @@ class LoginViewModel(
             runCatching {
                 authRepository.verifyOtp(email, code)
             }.onSuccess {
-                passwordReset.value = reset
+                _passwordReset.value = reset
             }.onFailure {
-                alert.value = "Invalid or expired code. Please try again."
+                _alert.value = "Invalid or expired code. Please try again."
             }
         }
     }
@@ -74,6 +79,10 @@ class LoginViewModel(
         viewModelScope.launch {
             runCatching {
                 authRepository.resetPassword(email)
+            }.onSuccess {
+                _alert.value = "Password reset email sent. Check your inbox."
+            }.onFailure {
+                _alert.value = "Failed to send password reset email. Please try again."
             }
         }
     }
@@ -83,17 +92,23 @@ class LoginViewModel(
             runCatching {
                 authRepository.changePassword(password)
             }.onSuccess {
-                alert.value = "Password changed successfully!"
+                _alert.value = "Password changed successfully!"
             }.onFailure {
-                alert.value = "There was an error while changing the password. Please try again."
+                _alert.value = "There was an error while changing the password. Please try again."
             }
         }
+    }
+
+    fun clearAlert() {
+        _alert.value = null
     }
 
     fun logout() {
         viewModelScope.launch {
             runCatching {
                 authRepository.signOut()
+            }.onFailure {
+                _alert.value = "Sign out failed. Please try again."
             }
         }
     }

@@ -15,8 +15,7 @@ class RoomMuscleGroupLocalDataSource(
         dao.observeAll().map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun replaceAll(groups: List<MuscleGroup>) {
-        dao.deleteAll()
-        dao.upsertAll(groups.map { it.toEntity() })
+        dao.replaceAll(groups.map { it.toEntity() })
     }
 
     override suspend fun upsert(group: MuscleGroup) {

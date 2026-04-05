@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,11 +57,19 @@ fun MuscleGroupsScreen(drawerState: DrawerState? = null) {
 
     val muscles by viewModel.muscles.collectAsState()
     val editState by viewModel.editState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.error.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     MuscleGroupsLayout(
         muscleGroups = muscles,
         editState = editState,
         drawerState = drawerState,
+        snackbarHostState = snackbarHostState,
         onAddMuscleGroupClick = { muscleName ->
             viewModel.addMuscleGroup(muscleName)
         },
@@ -84,6 +93,7 @@ internal fun MuscleGroupsLayout(
     muscleGroups: List<MuscleGroup> = emptyList(),
     editState: EditState = EditState.NotEditing,
     drawerState: DrawerState? = null,
+    snackbarHostState: SnackbarHostState? = null,
     onAddMuscleGroupClick: (String) -> Unit = {},
     onEditClick: (MuscleGroup) -> Unit = {},
     onUpdateMuscleGroupClick: (String) -> Unit = {},
@@ -108,7 +118,8 @@ internal fun MuscleGroupsLayout(
 
     WorkoutTrackerAppBar(
         title = "Muscle Groups",
-        drawerState = drawerState
+        drawerState = drawerState,
+        snackbarHostState = snackbarHostState
     ) { innerPadding ->
         Column(
             modifier = Modifier

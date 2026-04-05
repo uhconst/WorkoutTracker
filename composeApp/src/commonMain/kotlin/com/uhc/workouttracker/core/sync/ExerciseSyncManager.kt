@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.min
 
 @OptIn(SupabaseExperimental::class)
 class ExerciseSyncManager(
@@ -26,6 +27,7 @@ class ExerciseSyncManager(
 
     init {
         applicationScope.launch {
+            var retryDelayMs = 5_000L
             while (isActive) {
                 runCatching {
                     client.from("muscle_groups")
@@ -33,8 +35,11 @@ class ExerciseSyncManager(
                         .collect { dtos ->
                             muscleGroupLocal.replaceAll(dtos.map { it.toDomain() })
                         }
+                }.onSuccess {
+                    retryDelayMs = 5_000L  // reset backoff after a clean disconnect
                 }.onFailure {
-                    delay(10_000L)
+                    delay(retryDelayMs)
+                    retryDelayMs = min(retryDelayMs * 2, 60_000L)
                 }
             }
         }
