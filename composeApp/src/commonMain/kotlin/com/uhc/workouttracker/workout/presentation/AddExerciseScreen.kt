@@ -1,6 +1,6 @@
 package com.uhc.workouttracker.workout.presentation
 
-import kotlin.text.format
+import com.uhc.workouttracker.core.util.format2d
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -145,7 +145,7 @@ fun AddExerciseLayout(
     }
     var weight by remember(exercise, saveKey) {
         mutableStateOf(
-            exercise?.weightLogs?.firstOrNull()?.weight?.let { "%.2f".format(it) } ?: ""
+            exercise?.weightLogs?.firstOrNull()?.weight?.format2d() ?: ""
         )
     }
     var expanded by remember { mutableStateOf(false) }
@@ -219,7 +219,7 @@ fun AddExerciseLayout(
     fun adjustWeight(current: String, delta: Double): String {
         val parsed = current.toDoubleOrNull() ?: 0.0
         val result = (parsed + delta).coerceAtLeast(0.0)
-        return "%.2f".format(result)
+        return result.format2d()
     }
 
     val isEditing = exercise != null

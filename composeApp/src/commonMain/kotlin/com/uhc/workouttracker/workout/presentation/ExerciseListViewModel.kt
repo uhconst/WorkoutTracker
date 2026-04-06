@@ -22,11 +22,11 @@ class ExerciseListViewModel(
 ) : ViewModel() {
 
     val muscles: StateFlow<List<MuscleGroup>> = muscleGroupRepository.observeMuscleGroups()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _exercisesGroupedByMuscle: StateFlow<List<MuscleWithExercises>> =
         exerciseRepository.observeExercisesGroupedByMuscle()
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMuscleIds = _selectedMuscleIds.asStateFlow()
@@ -43,7 +43,7 @@ class ExerciseListViewModel(
         } else {
             exercises.filter { it.id in selectedIds }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun fetchExercises() {
         viewModelScope.launch {

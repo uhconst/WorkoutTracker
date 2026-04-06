@@ -1,5 +1,6 @@
 package com.uhc.workouttracker.workout.presentation
 
+import com.uhc.workouttracker.core.util.format2d
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -290,7 +291,7 @@ private fun ExerciseItem(
                 )
                 exercise.weightLogs.lastOrNull()?.let { lastLog ->
                     Text(
-                        text = "${"%.2f".format(lastLog.weight)} kg",
+                        text = "${lastLog.weight.format2d()} kg",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -22,6 +22,7 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,6 +52,7 @@ val viewModelModule = module {
 val supabaseModule = module {
     single {
         createSupabaseClient(supabaseUrl, supabaseAnonKey) {
+            requestTimeout = 30.seconds
             install(Auth)
             install(Postgrest)
             install(Realtime)

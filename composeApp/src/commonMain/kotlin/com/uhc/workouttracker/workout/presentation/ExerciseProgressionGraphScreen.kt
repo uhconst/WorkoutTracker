@@ -1,5 +1,6 @@
 package com.uhc.workouttracker.workout.presentation
 
+import com.uhc.workouttracker.core.util.format1d
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -45,6 +46,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -215,8 +217,8 @@ private fun LineChart(
 
                 ticks.forEach { tick ->
                     val y = size.height - bpx - ((tick - minWeight) / weightRange) * drawH
-                    val label = "%.1f kg".format(tick)
-                    val measured = textMeasurer.measure(label, yLabelStyle)
+                    val label = "${tick.format1d()} kg"
+                    val measured: TextLayoutResult = textMeasurer.measure(label, yLabelStyle)
                     val tx = size.width - measured.size.width - 6.dp.toPx()
                     val ty = y - measured.size.height / 2f
                     drawText(
@@ -341,7 +343,7 @@ private fun LineChart(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = "${"%.1f".format(log.weight)} kg",
+                                text = "${log.weight.format1d()} kg",
                                 style = MaterialTheme.typography.labelLarge,
                                 color = primaryColor
                             )
@@ -374,6 +376,7 @@ private fun computeYTicks(min: Float, max: Float, count: Int = 4): List<Float> {
     }
     return ticks
 }
+
 
 private fun shortDate(isoDate: String): String {
     if (isoDate.length < 10) return ""

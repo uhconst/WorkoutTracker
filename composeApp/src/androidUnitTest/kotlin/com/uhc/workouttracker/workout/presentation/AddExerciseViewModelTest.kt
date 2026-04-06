@@ -96,23 +96,23 @@ class AddExerciseViewModelTest {
     }
 
     @Test
-    fun `saveSuccess emits Exercise saved after new exercise`() = runTest {
+    fun `saveSuccess emits Exercise added after new exercise`() = runTest {
         coEvery { exerciseRepo.saveExercise(any(), any(), any()) } just Runs
         vm.saveSuccess.test {
             vm.saveExercise("Curl", 1L, 20.0)
-            assertEquals("Exercise saved", awaitItem())
+            assertEquals("Exercise added", awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `saveSuccess emits Exercise saved after update`() = runTest {
+    fun `saveSuccess emits Exercise updated after update`() = runTest {
         coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
         coEvery { exerciseRepo.updateExercise(any(), any(), any(), any()) } just Runs
         vm.setExerciseToEdit(1L)
         vm.saveSuccess.test {
             vm.saveExercise("Curl", 1L, 25.0)
-            assertEquals("Exercise saved", awaitItem())
+            assertEquals("Exercise updated", awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
     }
