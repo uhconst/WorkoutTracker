@@ -48,7 +48,7 @@ import com.uhc.workouttracker.core.theme.dimensions
 import com.uhc.workouttracker.core.ui.WorkoutTrackerAppBar
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel.EditState
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

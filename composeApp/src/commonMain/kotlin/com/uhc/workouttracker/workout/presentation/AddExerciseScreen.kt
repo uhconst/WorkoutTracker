@@ -32,6 +32,7 @@ import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -73,7 +74,7 @@ import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.WeightLog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -252,7 +253,7 @@ fun AddExerciseLayout(
                         OutlinedTextField(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor()
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true)
                                 .shineBorder(shineColor),
                             readOnly = true,
                             value = selectedMuscleGroup?.name ?: "",

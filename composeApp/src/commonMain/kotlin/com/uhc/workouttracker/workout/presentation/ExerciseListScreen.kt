@@ -64,7 +64,7 @@ import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
 import com.uhc.workouttracker.workout.domain.model.WeightLog
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

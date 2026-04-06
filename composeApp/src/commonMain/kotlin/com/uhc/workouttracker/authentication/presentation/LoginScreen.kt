@@ -55,7 +55,7 @@ import com.uhc.workouttracker.navigation.NavRoute
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.compose.auth.ui.ProviderButtonContent
 import io.github.jan.supabase.compose.auth.ui.annotations.AuthUiExperimental
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(AuthUiExperimental::class)

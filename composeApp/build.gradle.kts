@@ -35,6 +35,10 @@ kotlin {
         }
     }
     
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
