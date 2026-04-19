@@ -6,6 +6,8 @@ import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
+import com.uhc.workouttracker.workout.domain.model.ProgressionReadiness
+import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +20,7 @@ import kotlinx.coroutines.launch
 class ExerciseListViewModel(
     private val exerciseRepository: ExerciseRepository,
     private val authRepository: AuthRepository,
+    private val progressionRepository: ExerciseProgressionRepository,
     muscleGroupRepository: MuscleGroupRepository
 ) : ViewModel() {
 
@@ -27,6 +30,10 @@ class ExerciseListViewModel(
     private val _exercisesGroupedByMuscle: StateFlow<List<MuscleWithExercises>> =
         exerciseRepository.observeExercisesGroupedByMuscle()
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val progressions: StateFlow<Map<Long, ProgressionReadiness>> =
+        progressionRepository.observeAll()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMuscleIds = _selectedMuscleIds.asStateFlow()

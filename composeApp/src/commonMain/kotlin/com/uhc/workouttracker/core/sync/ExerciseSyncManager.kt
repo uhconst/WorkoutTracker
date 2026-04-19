@@ -65,6 +65,8 @@ class ExerciseSyncManager(
             .select(columns = columns)
             .decodeList<MuscleWithExercisesDto>()
             .map { it.toDomain() }
+        println("[Progression] syncExercises: about to replaceAll — this will cascade-delete exercise_progressions")
         exerciseLocal.replaceAll(groups)
+        println("[Progression] syncExercises: replaceAll done")
     }
 }

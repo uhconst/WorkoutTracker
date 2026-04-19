@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.Exercise
+import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ import kotlinx.coroutines.launch
 
 class AddExerciseViewModel(
     muscleGroupRepository: MuscleGroupRepository,
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
+    private val progressionRepository: ExerciseProgressionRepository
 ) : ViewModel() {
 
     val muscles: StateFlow<List<MuscleGroup>> = muscleGroupRepository.observeMuscleGroups()
@@ -42,12 +44,14 @@ class AddExerciseViewModel(
                         weight = weight
                     )
                 } else {
+                    val exerciseId = _editingExercise.value!!.id
                     exerciseRepository.updateExercise(
-                        id = _editingExercise.value!!.id,
+                        id = exerciseId,
                         name = name,
                         muscleGroupId = muscleGroupId,
                         weight = weight
                     )
+                    runCatching { progressionRepository.reset(exerciseId) }
                 }
             }.onSuccess {
                 val message = if (_editingExercise.value == null) "Exercise added" else "Exercise updated"

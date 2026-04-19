@@ -11,7 +11,7 @@ val iosDatabaseModule = module {
         Room.databaseBuilder<WorkoutTrackerDatabase>(name = "workout_tracker.db")
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.Default.limitedParallelism(1))
-            .addMigrations(WorkoutTrackerDatabase.MIGRATION_1_2)
+            .addMigrations(WorkoutTrackerDatabase.MIGRATION_1_2, WorkoutTrackerDatabase.MIGRATION_2_3, WorkoutTrackerDatabase.MIGRATION_3_4)
             .build()
     }
 }

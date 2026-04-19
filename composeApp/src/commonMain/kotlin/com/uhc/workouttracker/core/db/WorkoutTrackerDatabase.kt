@@ -7,20 +7,23 @@ import androidx.room.RoomDatabaseConstructor
 import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import com.uhc.workouttracker.core.db.dao.ExerciseDao
+import com.uhc.workouttracker.core.db.dao.ExerciseProgressionDao
 import com.uhc.workouttracker.core.db.dao.MuscleGroupDao
 import com.uhc.workouttracker.core.db.entity.ExerciseEntity
+import com.uhc.workouttracker.core.db.entity.ExerciseProgressionEntity
 import com.uhc.workouttracker.core.db.entity.MuscleGroupEntity
 import com.uhc.workouttracker.core.db.entity.WeightLogEntity
 
 @Database(
-    entities = [MuscleGroupEntity::class, ExerciseEntity::class, WeightLogEntity::class],
-    version = 2,
+    entities = [MuscleGroupEntity::class, ExerciseEntity::class, WeightLogEntity::class, ExerciseProgressionEntity::class],
+    version = 4,
     exportSchema = true
 )
 @ConstructedBy(WorkoutTrackerDatabaseConstructor::class)
 abstract class WorkoutTrackerDatabase : RoomDatabase() {
     abstract fun muscleGroupDao(): MuscleGroupDao
     abstract fun exerciseDao(): ExerciseDao
+    abstract fun exerciseProgressionDao(): ExerciseProgressionDao
 
     companion object {
         val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -28,6 +31,29 @@ abstract class WorkoutTrackerDatabase : RoomDatabase() {
                 connection.prepare("ALTER TABLE weight_logs ADD COLUMN date TEXT NOT NULL DEFAULT ''").use {
                     it.step()
                 }
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.prepare(
+                    "CREATE TABLE IF NOT EXISTS exercise_progressions (" +
+                    "exercise_id INTEGER NOT NULL PRIMARY KEY, " +
+                    "readiness TEXT NOT NULL DEFAULT 'ON_TRACK', " +
+                    "FOREIGN KEY(exercise_id) REFERENCES exercises(id) ON DELETE CASCADE)"
+                ).use { it.step() }
+            }
+        }
+
+        // Recreate exercise_progressions without FK so exercise syncs don't cascade-wipe it
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(connection: SQLiteConnection) {
+                connection.prepare("DROP TABLE IF EXISTS exercise_progressions").use { it.step() }
+                connection.prepare(
+                    "CREATE TABLE exercise_progressions (" +
+                    "exercise_id INTEGER NOT NULL PRIMARY KEY, " +
+                    "readiness TEXT NOT NULL DEFAULT 'ON_TRACK')"
+                ).use { it.step() }
             }
         }
     }
