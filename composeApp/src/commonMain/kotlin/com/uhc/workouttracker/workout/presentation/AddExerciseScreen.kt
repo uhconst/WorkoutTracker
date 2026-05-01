@@ -95,12 +95,14 @@ fun AddExerciseScreen(
     }
 
     LaunchedEffect(Unit) {
+        viewModel.navigateBack.collect {
+            navController?.popBackStack()
+        }
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.saveSuccess.collect {
-            if (isEditing) {
-                navController?.popBackStack()
-            } else {
-                saveKey++
-            }
+            saveKey++
         }
     }
 
