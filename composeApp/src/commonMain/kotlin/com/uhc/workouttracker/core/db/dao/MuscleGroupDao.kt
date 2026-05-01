@@ -24,9 +24,16 @@ interface MuscleGroupDao {
     @Query("DELETE FROM muscle_groups")
     suspend fun deleteAll()
 
+    @Query("DELETE FROM muscle_groups WHERE id NOT IN (:ids)")
+    suspend fun deleteExcept(ids: List<Long>)
+
     @Transaction
     suspend fun replaceAll(groups: List<MuscleGroupEntity>) {
-        deleteAll()
+        if (groups.isEmpty()) {
+            deleteAll()
+        } else {
+            deleteExcept(groups.map { it.id })
+        }
         upsertAll(groups)
     }
 }
