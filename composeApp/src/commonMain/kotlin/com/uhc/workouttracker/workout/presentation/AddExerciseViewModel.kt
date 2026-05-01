@@ -7,6 +7,7 @@ import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +20,8 @@ import kotlinx.coroutines.launch
 class AddExerciseViewModel(
     muscleGroupRepository: MuscleGroupRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val progressionRepository: ExerciseProgressionRepository
+    private val progressionRepository: ExerciseProgressionRepository,
+    private val applicationScope: CoroutineScope
 ) : ViewModel() {
 
     val muscles: StateFlow<List<MuscleGroup>> = muscleGroupRepository.observeMuscleGroups()
@@ -34,30 +36,38 @@ class AddExerciseViewModel(
     private val _saveError = MutableSharedFlow<String>()
     val saveError = _saveError.asSharedFlow()
 
+    private val _navigateBack = MutableSharedFlow<Unit>()
+    val navigateBack = _navigateBack.asSharedFlow()
+
     fun saveExercise(name: String, muscleGroupId: Long, weight: Double) {
-        viewModelScope.launch {
-            runCatching {
-                if (_editingExercise.value == null) {
+        val editing = _editingExercise.value
+        if (editing == null) {
+            viewModelScope.launch {
+                runCatching {
                     exerciseRepository.saveExercise(
                         name = name,
                         muscleGroupId = muscleGroupId,
                         weight = weight
                     )
-                } else {
-                    val exerciseId = _editingExercise.value!!.id
+                }.onSuccess {
+                    _saveSuccess.emit("Exercise added")
+                }.onFailure {
+                    _saveError.emit("Failed to save exercise. Please try again.")
+                }
+            }
+        } else {
+            // Navigate back immediately; save runs in applicationScope so it survives ViewModel clearing.
+            viewModelScope.launch { _navigateBack.emit(Unit) }
+            applicationScope.launch {
+                runCatching {
                     exerciseRepository.updateExercise(
-                        id = exerciseId,
+                        id = editing.id,
                         name = name,
                         muscleGroupId = muscleGroupId,
                         weight = weight
                     )
-                    runCatching { progressionRepository.reset(exerciseId) }
+                    progressionRepository.reset(editing.id)
                 }
-            }.onSuccess {
-                val message = if (_editingExercise.value == null) "Exercise added" else "Exercise updated"
-                _saveSuccess.emit(message)
-            }.onFailure {
-                _saveError.emit("Failed to save exercise. Please try again.")
             }
         }
     }

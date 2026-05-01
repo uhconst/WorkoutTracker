@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.Runs
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -38,7 +39,7 @@ class AddExerciseViewModelTest {
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { muscleRepo.observeMuscleGroups() } returns flowOf(emptyList())
-        vm = AddExerciseViewModel(muscleRepo, exerciseRepo, progressionRepo)
+        vm = AddExerciseViewModel(muscleRepo, exerciseRepo, progressionRepo, CoroutineScope(UnconfinedTestDispatcher()))
     }
 
     @After
@@ -108,14 +109,25 @@ class AddExerciseViewModelTest {
     }
 
     @Test
-    fun `saveSuccess emits Exercise updated after update`() = runTest {
+    fun `saveExercise with editingExercise - emits navigateBack immediately`() = runTest {
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
+        coEvery { exerciseRepo.updateExercise(any(), any(), any(), any()) } just Runs
+        vm.setExerciseToEdit(1L)
+        vm.navigateBack.test {
+            vm.saveExercise("Curl", 1L, 25.0)
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `saveExercise with editingExercise - does not emit saveSuccess`() = runTest {
         coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
         coEvery { exerciseRepo.updateExercise(any(), any(), any(), any()) } just Runs
         vm.setExerciseToEdit(1L)
         vm.saveSuccess.test {
             vm.saveExercise("Curl", 1L, 25.0)
-            assertEquals("Exercise updated", awaitItem())
-            cancelAndIgnoreRemainingEvents()
+            expectNoEvents()
         }
     }
 
