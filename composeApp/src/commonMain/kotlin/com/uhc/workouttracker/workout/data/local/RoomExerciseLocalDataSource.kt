@@ -20,6 +20,9 @@ class RoomExerciseLocalDataSource(
     override suspend fun getById(id: Long): Exercise? =
         dao.getById(id)?.toDomain()
 
+    override suspend fun deleteById(id: Long) =
+        dao.deleteById(id)
+
     override suspend fun replaceAll(groups: List<MuscleWithExercises>) {
         dao.replaceAll(
             muscleGroups = groups.map { it.toMuscleGroupEntity() },

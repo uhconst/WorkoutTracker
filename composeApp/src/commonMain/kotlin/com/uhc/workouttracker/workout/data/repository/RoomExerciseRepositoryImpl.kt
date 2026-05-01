@@ -52,6 +52,11 @@ class RoomExerciseRepositoryImpl(
         }
         syncManager.syncExercises()
     }
+
+    override suspend fun deleteExercise(id: Long) {
+        client.from("exercises").delete { filter { eq("id", id) } }
+        local.deleteById(id)
+    }
 }
 
 @Serializable

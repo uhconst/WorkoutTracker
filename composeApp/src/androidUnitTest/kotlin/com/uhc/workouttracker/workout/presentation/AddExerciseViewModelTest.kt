@@ -167,4 +167,68 @@ class AddExerciseViewModelTest {
         vm.saveExercise("Curl", 1L, 20.0)
         coVerify(exactly = 0) { progressionRepo.reset(any()) }
     }
+
+    // deleteExercise
+
+    @Test
+    fun `deleteExercise with no editingExercise - does not call repo`() = runTest {
+        vm.deleteExercise()
+        coVerify(exactly = 0) { exerciseRepo.deleteExercise(any()) }
+    }
+
+    @Test
+    fun `deleteExercise - calls deleteExercise on repo with correct id`() = runTest {
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
+        coEvery { exerciseRepo.deleteExercise(1L) } just Runs
+        vm.setExerciseToEdit(1L)
+        vm.deleteExercise()
+        coVerify { exerciseRepo.deleteExercise(1L) }
+    }
+
+    @Test
+    fun `deleteExercise success - emits navigateToList`() = runTest {
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
+        coEvery { exerciseRepo.deleteExercise(1L) } just Runs
+        vm.setExerciseToEdit(1L)
+        vm.navigateToList.test {
+            vm.deleteExercise()
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `deleteExercise success - does not emit saveError`() = runTest {
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
+        coEvery { exerciseRepo.deleteExercise(1L) } just Runs
+        vm.setExerciseToEdit(1L)
+        vm.saveError.test {
+            vm.deleteExercise()
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `deleteExercise failure - emits saveError`() = runTest {
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
+        coEvery { exerciseRepo.deleteExercise(any()) } throws RuntimeException("network error")
+        vm.setExerciseToEdit(1L)
+        vm.saveError.test {
+            vm.deleteExercise()
+            val message = awaitItem()
+            assert(message.isNotBlank())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `deleteExercise failure - does not emit navigateToList`() = runTest {
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
+        coEvery { exerciseRepo.deleteExercise(any()) } throws RuntimeException("network error")
+        vm.setExerciseToEdit(1L)
+        vm.navigateToList.test {
+            vm.deleteExercise()
+            expectNoEvents()
+        }
+    }
 }

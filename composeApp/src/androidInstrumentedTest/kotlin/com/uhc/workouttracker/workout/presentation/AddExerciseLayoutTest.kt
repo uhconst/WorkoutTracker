@@ -3,7 +3,6 @@ package com.uhc.workouttracker.workout.presentation
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -223,5 +222,101 @@ class AddExerciseLayoutTest {
         composeTestRule.onNodeWithText("Muscle Group").performClick()
         composeTestRule.onNodeWithText("Chest").performClick()
         composeTestRule.onNodeWithText("Please select a muscle group").assertDoesNotExist()
+    }
+
+    // Delete button + confirmation dialog
+
+    @Test
+    fun `Delete Exercise button shown when onDeleteExercise provided`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = listOf(chest),
+                    exercise = exercise1,
+                    onDeleteExercise = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Delete Exercise").assertIsDisplayed()
+    }
+
+    @Test
+    fun `Delete Exercise button hidden when onDeleteExercise is null`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = listOf(chest),
+                    exercise = exercise1,
+                    onDeleteExercise = null
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Delete Exercise").assertDoesNotExist()
+    }
+
+    @Test
+    fun `tapping Delete Exercise shows confirmation dialog`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = listOf(chest),
+                    exercise = exercise1,
+                    onDeleteExercise = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Delete Exercise").performClick()
+        composeTestRule.onNodeWithText("Are you sure you want to delete this exercise? This action cannot be undone.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `confirmation dialog Cancel dismisses without calling onDeleteExercise`() {
+        var called = false
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = listOf(chest),
+                    exercise = exercise1,
+                    onDeleteExercise = { called = true }
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Delete Exercise").performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+        assertFalse(called)
+        composeTestRule.onNodeWithText("Are you sure you want to delete this exercise? This action cannot be undone.").assertDoesNotExist()
+    }
+
+    @Test
+    fun `confirmation dialog Delete calls onDeleteExercise`() {
+        var called = false
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = listOf(chest),
+                    exercise = exercise1,
+                    onDeleteExercise = { called = true }
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Delete Exercise").performClick()
+        composeTestRule.onNodeWithText("Delete").performClick()
+        assert(called)
+    }
+
+    @Test
+    fun `confirmation dialog dismissed after Delete confirmed`() {
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(
+                    muscleGroups = listOf(chest),
+                    exercise = exercise1,
+                    onDeleteExercise = {}
+                )
+            }
+        }
+        composeTestRule.onNodeWithText("Delete Exercise").performClick()
+        composeTestRule.onNodeWithText("Delete").performClick()
+        composeTestRule.onNodeWithText("Are you sure you want to delete this exercise? This action cannot be undone.").assertDoesNotExist()
     }
 }

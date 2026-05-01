@@ -39,6 +39,9 @@ class AddExerciseViewModel(
     private val _navigateBack = MutableSharedFlow<Unit>()
     val navigateBack = _navigateBack.asSharedFlow()
 
+    private val _navigateToList = MutableSharedFlow<Unit>()
+    val navigateToList = _navigateToList.asSharedFlow()
+
     fun saveExercise(name: String, muscleGroupId: Long, weight: Double) {
         val editing = _editingExercise.value
         if (editing == null) {
@@ -75,6 +78,19 @@ class AddExerciseViewModel(
     fun setExerciseToEdit(exerciseId: Long) {
         viewModelScope.launch {
             _editingExercise.value = exerciseRepository.getExerciseById(exerciseId)
+        }
+    }
+
+    fun deleteExercise() {
+        val id = _editingExercise.value?.id ?: return
+        viewModelScope.launch {
+            runCatching {
+                exerciseRepository.deleteExercise(id)
+            }.onSuccess {
+                _navigateToList.emit(Unit)
+            }.onFailure {
+                _saveError.emit("Failed to delete exercise. Please try again.")
+            }
         }
     }
 }

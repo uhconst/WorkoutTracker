@@ -30,6 +30,9 @@ interface ExerciseDao {
     @Upsert
     suspend fun upsertWeightLogs(logs: List<WeightLogEntity>)
 
+    @Query("DELETE FROM exercises WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
     @Query("DELETE FROM weight_logs")
     suspend fun deleteAllWeightLogs()
 

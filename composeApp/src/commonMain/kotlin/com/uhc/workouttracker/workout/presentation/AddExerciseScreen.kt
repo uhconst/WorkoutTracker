@@ -27,6 +27,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenuItem
@@ -112,6 +113,15 @@ fun AddExerciseScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.navigateToList.collect {
+            navController?.navigate(com.uhc.workouttracker.navigation.NavRoute.WorkoutListDestination) {
+                popUpTo(com.uhc.workouttracker.navigation.NavRoute.WorkoutListDestination) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    }
+
     AddExerciseLayout(
         muscleGroups = muscles,
         exercise = editingExercise,
@@ -119,6 +129,9 @@ fun AddExerciseScreen(
         onSaveExercise = { name, muscleGroupId, weight ->
             viewModel.saveExercise(name, muscleGroupId, weight)
         },
+        onDeleteExercise = if (isEditing) {
+            { viewModel.deleteExercise() }
+        } else null,
         onViewExercises = if (!isEditing) {
             { navController?.navigate(com.uhc.workouttracker.navigation.NavRoute.WorkoutListDestination) { launchSingleTop = true } }
         } else null,
@@ -134,10 +147,12 @@ fun AddExerciseLayout(
     exercise: Exercise? = null,
     saveKey: Int = 0,
     onSaveExercise: (name: String, muscleGroupId: Long, weight: Double) -> Unit = { _, _, _ -> },
+    onDeleteExercise: (() -> Unit)? = null,
     onViewExercises: (() -> Unit)? = null,
     drawerState: DrawerState? = null,
     snackbarHostState: SnackbarHostState? = null
 ) {
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     var exerciseName by remember(exercise, saveKey) { mutableStateOf(exercise?.name ?: "") }
     var selectedMuscleGroup by remember(exercise, muscleGroups, saveKey) {
         mutableStateOf(
@@ -226,6 +241,31 @@ fun AddExerciseLayout(
     }
 
     val isEditing = exercise != null
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Exercise") },
+            text = { Text("Are you sure you want to delete this exercise? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        haptic.perform(HapticType.Confirm)
+                        onDeleteExercise?.invoke()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     WorkoutTrackerAppBar(
         title = if (isEditing) "Edit Exercise" else "Add Exercise",
@@ -393,6 +433,18 @@ fun AddExerciseLayout(
                 ) {
                     Text("Save")
                 }
+                if (onDeleteExercise != null) {
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            haptic.perform(HapticType.Selection)
+                            showDeleteConfirmation = true
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Delete Exercise")
+                    }
+                }
                 if (onViewExercises != null) {
                     TextButton(
                         modifier = Modifier
@@ -459,7 +511,8 @@ private fun AddExerciseEditPreview() {
                 muscleGroupId = 1,
                 weightLogs = listOf(WeightLog(id = 1, weight = 80f, exerciseId = 1))
             ),
-            onSaveExercise = { _, _, _ -> }
+            onSaveExercise = { _, _, _ -> },
+            onDeleteExercise = {}
         )
     }
 }
