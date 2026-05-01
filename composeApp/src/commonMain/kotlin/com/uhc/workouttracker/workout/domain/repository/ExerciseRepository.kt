@@ -10,4 +10,5 @@ interface ExerciseRepository {
     suspend fun getExerciseById(id: Long): Exercise?
     suspend fun saveExercise(name: String, muscleGroupId: Long, weight: Double)
     suspend fun updateExercise(id: Long, name: String, muscleGroupId: Long, weight: Double)
+    suspend fun deleteExercise(id: Long)
 }
