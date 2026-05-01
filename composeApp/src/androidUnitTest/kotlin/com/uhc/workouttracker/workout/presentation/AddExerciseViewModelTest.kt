@@ -57,6 +57,18 @@ class AddExerciseViewModelTest {
     }
 
     @Test
+    fun `setExerciseToEdit - preserves all weight logs in insertion order`() = runTest {
+        val oldLog = WeightLog(id = 1L, weight = 20f, exerciseId = 1L)
+        val newLog = WeightLog(id = 2L, weight = 60f, exerciseId = 1L)
+        val exercise = exercise1.copy(weightLogs = listOf(oldLog, newLog))
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise
+        vm.setExerciseToEdit(1L)
+        val logs = vm.editingExercise.value?.weightLogs
+        assertEquals(2, logs?.size)
+        assertEquals(60f, logs?.lastOrNull()?.weight)
+    }
+
+    @Test
     fun `setExerciseToEdit non-existent id - sets null`() = runTest {
         coEvery { exerciseRepo.getExerciseById(any()) } returns null
         vm.setExerciseToEdit(999L)
