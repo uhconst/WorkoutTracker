@@ -4,7 +4,9 @@ import com.uhc.workouttracker.authentication.domain.repository.AuthRepository
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
+import com.uhc.workouttracker.workout.domain.model.ProgressionReadiness
 import com.uhc.workouttracker.workout.domain.model.WeightLog
+import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import io.mockk.coEvery
 import io.mockk.every
@@ -29,6 +31,7 @@ class ExerciseListViewModelTest {
 
     private val exerciseRepo = mockk<ExerciseRepository>(relaxed = true)
     private val authRepo = mockk<AuthRepository>(relaxed = true)
+    private val progressionRepo = mockk<ExerciseProgressionRepository>(relaxed = true)
     private val muscleRepo = mockk<MuscleGroupRepository>(relaxed = true)
     private lateinit var vm: ExerciseListViewModel
 
@@ -37,16 +40,18 @@ class ExerciseListViewModelTest {
     private val bicepsGroup = MuscleWithExercises(id = 1L, muscleName = "Biceps", exercises = listOf(exercise1))
     private val chestGroup  = MuscleWithExercises(id = 2L, muscleName = "Chest",  exercises = emptyList())
 
-    // Backing flow used to simulate Room/cache emissions
+    // Backing flows used to simulate Room/cache emissions
     private val exercisesFlow = MutableStateFlow<List<MuscleWithExercises>>(emptyList())
+    private val progressionsFlow = MutableStateFlow<Map<Long, ProgressionReadiness>>(emptyMap())
 
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { muscleRepo.observeMuscleGroups() } returns flowOf(emptyList())
         every { exerciseRepo.observeExercisesGroupedByMuscle() } returns exercisesFlow
+        every { progressionRepo.observeAll() } returns progressionsFlow
         coEvery { authRepo.refreshSession() } just Runs
-        vm = ExerciseListViewModel(exerciseRepo, authRepo, muscleRepo)
+        vm = ExerciseListViewModel(exerciseRepo, authRepo, progressionRepo, muscleRepo)
     }
 
     @After
@@ -160,5 +165,16 @@ class ExerciseListViewModelTest {
         coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("offline")
         vm.fetchExercises()
         assertNotNull(vm.error.value)
+    }
+
+    @Test
+    fun `progressions initial is empty map`() {
+        assertEquals(emptyMap<Long, ProgressionReadiness>(), vm.progressions.value)
+    }
+
+    @Test
+    fun `progressions reflects data from observeAll flow`() = runTest {
+        progressionsFlow.value = mapOf(1L to ProgressionReadiness.INCREASE_WEIGHT)
+        assertEquals(mapOf(1L to ProgressionReadiness.INCREASE_WEIGHT), vm.progressions.value)
     }
 }

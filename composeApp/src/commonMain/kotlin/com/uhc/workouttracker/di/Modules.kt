@@ -12,12 +12,17 @@ import com.uhc.workouttracker.muscle.data.repository.RoomMuscleGroupRepositoryIm
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.muscle.presentation.MuscleGroupsViewModel
 import com.uhc.workouttracker.workout.data.local.ExerciseLocalDataSource
+import com.uhc.workouttracker.workout.data.local.ExerciseProgressionLocalDataSource
 import com.uhc.workouttracker.workout.data.local.RoomExerciseLocalDataSource
+import com.uhc.workouttracker.workout.data.local.RoomExerciseProgressionLocalDataSource
+import com.uhc.workouttracker.workout.data.repository.RoomExerciseProgressionRepositoryImpl
 import com.uhc.workouttracker.workout.data.repository.RoomExerciseRepositoryImpl
+import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import com.uhc.workouttracker.workout.presentation.AddExerciseViewModel
 import com.uhc.workouttracker.workout.presentation.ExerciseListViewModel
 import com.uhc.workouttracker.workout.presentation.ExerciseProgressionGraphViewModel
+import com.uhc.workouttracker.workout.presentation.ProgressionReadinessViewModel
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -34,11 +39,14 @@ val dataModule = module {
     single<CoroutineScope> { CoroutineScope(SupervisorJob() + Dispatchers.IO) }
     single { get<WorkoutTrackerDatabase>().muscleGroupDao() }
     single { get<WorkoutTrackerDatabase>().exerciseDao() }
+    single { get<WorkoutTrackerDatabase>().exerciseProgressionDao() }
     single<MuscleGroupLocalDataSource> { RoomMuscleGroupLocalDataSource(get()) }
     single<ExerciseLocalDataSource> { RoomExerciseLocalDataSource(get()) }
+    single<ExerciseProgressionLocalDataSource> { RoomExerciseProgressionLocalDataSource(get()) }
     single<SyncManager> { ExerciseSyncManager(get(), get(), get(), get()) }
     single<MuscleGroupRepository> { RoomMuscleGroupRepositoryImpl(get(), get()) }
     single<ExerciseRepository> { RoomExerciseRepositoryImpl(get(), get(), get()) }
+    single<ExerciseProgressionRepository> { RoomExerciseProgressionRepositoryImpl(get(), get()) }
 }
 
 val viewModelModule = module {
@@ -47,6 +55,7 @@ val viewModelModule = module {
     viewModelOf(::MuscleGroupsViewModel)
     viewModelOf(::AddExerciseViewModel)
     viewModelOf(::ExerciseProgressionGraphViewModel)
+    viewModelOf(::ProgressionReadinessViewModel)
 }
 
 val supabaseModule = module {

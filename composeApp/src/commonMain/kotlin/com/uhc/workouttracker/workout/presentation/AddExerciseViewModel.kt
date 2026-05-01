@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.uhc.workouttracker.muscle.domain.model.MuscleGroup
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.Exercise
+import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 class AddExerciseViewModel(
     muscleGroupRepository: MuscleGroupRepository,
     private val exerciseRepository: ExerciseRepository,
+    private val progressionRepository: ExerciseProgressionRepository,
     private val applicationScope: CoroutineScope
 ) : ViewModel() {
 
@@ -64,6 +66,7 @@ class AddExerciseViewModel(
                         muscleGroupId = muscleGroupId,
                         weight = weight
                     )
+                    progressionRepository.reset(editing.id)
                 }
             }
         }

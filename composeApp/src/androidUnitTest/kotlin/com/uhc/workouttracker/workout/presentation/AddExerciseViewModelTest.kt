@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.uhc.workouttracker.muscle.domain.repository.MuscleGroupRepository
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.WeightLog
+import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,6 +29,7 @@ class AddExerciseViewModelTest {
 
     private val muscleRepo = mockk<MuscleGroupRepository>(relaxed = true)
     private val exerciseRepo = mockk<ExerciseRepository>(relaxed = true)
+    private val progressionRepo = mockk<ExerciseProgressionRepository>(relaxed = true)
     private lateinit var vm: AddExerciseViewModel
 
     private val weightLog1 = WeightLog(id = 1L, weight = 20f, exerciseId = 1L)
@@ -37,7 +39,7 @@ class AddExerciseViewModelTest {
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { muscleRepo.observeMuscleGroups() } returns flowOf(emptyList())
-        vm = AddExerciseViewModel(muscleRepo, exerciseRepo, CoroutineScope(UnconfinedTestDispatcher()))
+        vm = AddExerciseViewModel(muscleRepo, exerciseRepo, progressionRepo, CoroutineScope(UnconfinedTestDispatcher()))
     }
 
     @After
@@ -147,5 +149,22 @@ class AddExerciseViewModelTest {
             vm.saveExercise("Curl", 1L, 20.0)
             expectNoEvents()
         }
+    }
+
+    @Test
+    fun `saveExercise with editingExercise - calls reset on progressionRepo`() = runTest {
+        coEvery { exerciseRepo.getExerciseById(1L) } returns exercise1
+        coEvery { exerciseRepo.updateExercise(any(), any(), any(), any()) } just Runs
+        coEvery { progressionRepo.reset(any()) } just Runs
+        vm.setExerciseToEdit(1L)
+        vm.saveExercise("Curl", 1L, 25.0)
+        coVerify { progressionRepo.reset(exercise1.id) }
+    }
+
+    @Test
+    fun `saveExercise new exercise - does NOT call reset on progressionRepo`() = runTest {
+        coEvery { exerciseRepo.saveExercise(any(), any(), any()) } just Runs
+        vm.saveExercise("Curl", 1L, 20.0)
+        coVerify(exactly = 0) { progressionRepo.reset(any()) }
     }
 }

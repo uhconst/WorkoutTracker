@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
@@ -49,6 +51,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -63,6 +66,7 @@ import com.uhc.workouttracker.navigation.LocalNavController
 import com.uhc.workouttracker.navigation.NavRoute
 import com.uhc.workouttracker.workout.domain.model.Exercise
 import com.uhc.workouttracker.workout.domain.model.MuscleWithExercises
+import com.uhc.workouttracker.workout.domain.model.ProgressionReadiness
 import com.uhc.workouttracker.workout.domain.model.WeightLog
 import androidx.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
@@ -75,6 +79,7 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
     val exercisesGroupedByMuscle by viewModel.filteredExercises.collectAsState()
     val muscles by viewModel.muscles.collectAsState()
     val selectedMuscleIds by viewModel.selectedMuscleIds.collectAsState()
+    val progressions by viewModel.progressions.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -91,6 +96,7 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
         exercisesGroupedByMuscle = exercisesGroupedByMuscle,
         muscles = muscles,
         selectedMuscleIds = selectedMuscleIds,
+        progressions = progressions,
         onMuscleSelected = viewModel::selectMuscleFilter,
         drawerState = drawerState,
         navController = navController,
@@ -104,6 +110,7 @@ internal fun ExerciseListLayout(
     exercisesGroupedByMuscle: List<MuscleWithExercises> = emptyList(),
     muscles: List<MuscleGroup> = emptyList(),
     selectedMuscleIds: Set<Long> = emptySet(),
+    progressions: Map<Long, ProgressionReadiness> = emptyMap(),
     onMuscleSelected: (Long?) -> Unit = {},
     drawerState: DrawerState? = null,
     navController: NavController? = null,
@@ -217,8 +224,11 @@ internal fun ExerciseListLayout(
                                         )
                                     } else {
                                         muscleGroup.exercises.forEach { exercise ->
+                                            val readiness = progressions[exercise.id]
+                                                ?: ProgressionReadiness.ON_TRACK
                                             ExerciseItem(
                                                 exercise = exercise,
+                                                readiness = readiness,
                                                 onEdit = {
                                                     navController?.navigate(NavRoute.AddExerciseDestination(exercise.id)) {
                                                         launchSingleTop = true
@@ -227,6 +237,14 @@ internal fun ExerciseListLayout(
                                                 onViewGraph = {
                                                     navController?.navigate(
                                                         NavRoute.ExerciseProgressionGraphDestination(exercise.id, exercise.name)
+                                                    ) { launchSingleTop = true }
+                                                },
+                                                onProgressionReadiness = {
+                                                    navController?.navigate(
+                                                        NavRoute.ProgressionReadinessDestination(
+                                                            exerciseId = exercise.id,
+                                                            exerciseName = exercise.name
+                                                        )
                                                     ) { launchSingleTop = true }
                                                 }
                                             )
@@ -245,8 +263,10 @@ internal fun ExerciseListLayout(
 @Composable
 private fun ExerciseItem(
     exercise: Exercise,
+    readiness: ProgressionReadiness = ProgressionReadiness.ON_TRACK,
     onEdit: () -> Unit = {},
-    onViewGraph: () -> Unit = {}
+    onViewGraph: () -> Unit = {},
+    onProgressionReadiness: () -> Unit = {}
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -298,6 +318,24 @@ private fun ExerciseItem(
                 }
             }
 
+            if (readiness != ProgressionReadiness.ON_TRACK) {
+                IconButton(onClick = onProgressionReadiness) {
+                    Icon(
+                        imageVector = when (readiness) {
+                            ProgressionReadiness.INCREASE_WEIGHT -> Icons.Default.ArrowUpward
+                            ProgressionReadiness.REDUCE_WEIGHT -> Icons.Default.ArrowDownward
+                            ProgressionReadiness.ON_TRACK -> Icons.Default.ArrowUpward
+                        },
+                        contentDescription = readiness.name,
+                        tint = when (readiness) {
+                            ProgressionReadiness.INCREASE_WEIGHT -> Color(0xFF2E7D32)
+                            ProgressionReadiness.REDUCE_WEIGHT -> Color(0xFFC62828)
+                            ProgressionReadiness.ON_TRACK -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
+            }
+
             Box {
                 IconButton(onClick = { showMenu = true }) {
                     Icon(
@@ -317,6 +355,10 @@ private fun ExerciseItem(
                     DropdownMenuItem(
                         text = { Text("History") },
                         onClick = { showMenu = false; onViewGraph() }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Progression Readiness") },
+                        onClick = { showMenu = false; onProgressionReadiness() }
                     )
                 }
             }

@@ -12,6 +12,7 @@ import com.uhc.workouttracker.muscle.presentation.MuscleGroupsScreen
 import com.uhc.workouttracker.workout.presentation.AddExerciseScreen
 import com.uhc.workouttracker.workout.presentation.ExerciseListScreen
 import com.uhc.workouttracker.workout.presentation.ExerciseProgressionGraphScreen
+import com.uhc.workouttracker.workout.presentation.ProgressionReadinessScreen
 
 @Composable
 fun TicketMasterNavHost(
@@ -40,6 +41,13 @@ fun TicketMasterNavHost(
         composable<NavRoute.ExerciseProgressionGraphDestination> { backStackEntry ->
             val args = backStackEntry.toRoute<NavRoute.ExerciseProgressionGraphDestination>()
             ExerciseProgressionGraphScreen(exerciseId = args.exerciseId, exerciseName = args.exerciseName)
+        }
+        composable<NavRoute.ProgressionReadinessDestination> { backStackEntry ->
+            val args = backStackEntry.toRoute<NavRoute.ProgressionReadinessDestination>()
+            ProgressionReadinessScreen(
+                exerciseId = args.exerciseId,
+                exerciseName = args.exerciseName
+            )
         }
     }
 }

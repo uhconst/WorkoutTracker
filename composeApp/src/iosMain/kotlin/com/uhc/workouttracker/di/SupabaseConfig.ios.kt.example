@@ -1,0 +1,6 @@
+package com.uhc.workouttracker.di
+
+// Copy this file to SupabaseConfig.ios.kt and fill in your Supabase project values.
+// SupabaseConfig.ios.kt is listed in .gitignore and must NOT be committed.
+actual val supabaseUrl: String = "https://<your-project-ref>.supabase.co"
+actual val supabaseAnonKey: String = "<your-anon-key>"
