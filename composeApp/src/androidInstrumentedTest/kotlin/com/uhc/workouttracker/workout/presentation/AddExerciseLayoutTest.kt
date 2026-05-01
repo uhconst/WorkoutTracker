@@ -78,6 +78,23 @@ class AddExerciseLayoutTest {
     }
 
     @Test
+    fun `weight pre-filled from last log when exercise has multiple weight logs`() {
+        val oldLog = WeightLog(id = 1L, weight = 20f, exerciseId = 1L)
+        val newLog = WeightLog(id = 2L, weight = 60f, exerciseId = 1L)
+        val exercise = Exercise(
+            id = 1L, name = "Bench Press", muscleGroupId = 1L,
+            weightLogs = listOf(oldLog, newLog)
+        )
+        composeTestRule.setContent {
+            WorkoutTrackerTheme {
+                AddExerciseLayout(muscleGroups = listOf(chest), exercise = exercise)
+            }
+        }
+        composeTestRule.onNodeWithText("60.00").assertIsDisplayed()
+        composeTestRule.onNodeWithText("20.00").assertDoesNotExist()
+    }
+
+    @Test
     fun `muscle group error shown when Save with no muscle selected`() {
         composeTestRule.setContent {
             WorkoutTrackerTheme {
