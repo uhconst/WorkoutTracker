@@ -193,10 +193,9 @@ private fun LineChart(
     val paddingStartDp = 8.dp
     val paddingEndDp = 16.dp
 
-    val minWeight = weightLogs.minOf { it.weight }
     val maxWeight = weightLogs.maxOf { it.weight }
-    val weightRange = (maxWeight - minWeight).coerceAtLeast(0.1f)
-    val ticks = remember(minWeight, maxWeight) { computeYTicks(minWeight, maxWeight) }
+    val weightRange = maxWeight.coerceAtLeast(0.1f)
+    val ticks = remember(maxWeight) { computeYTicks(0f, maxWeight) }
 
     BoxWithConstraints(modifier = modifier.height(chartHeightDp)) {
         val chartAreaWidth: Dp = maxWidth - yAxisWidthDp
@@ -216,7 +215,7 @@ private fun LineChart(
                 val drawH = size.height - paddingTopDp.toPx() - bpx
 
                 ticks.forEach { tick ->
-                    val y = size.height - bpx - ((tick - minWeight) / weightRange) * drawH
+                    val y = size.height - bpx - (tick / weightRange) * drawH
                     val label = "${tick.format1d()} kg"
                     val measured: TextLayoutResult = textMeasurer.measure(label, yLabelStyle)
                     val tx = size.width - measured.size.width - 6.dp.toPx()
@@ -241,7 +240,7 @@ private fun LineChart(
                     modifier = Modifier
                         .width(canvasWidth)
                         .height(chartHeightDp)
-                        .pointerInput(weightLogs, minWeight, weightRange) {
+                        .pointerInput(weightLogs, weightRange) {
                             detectTapGestures { offset ->
                                 val ppx = pointSpacingDp.toPx()
                                 val spx = paddingStartDp.toPx()
@@ -251,7 +250,7 @@ private fun LineChart(
                                 var found = -1
                                 weightLogs.forEachIndexed { i, log ->
                                     val cx = spx + i * ppx
-                                    val cy = size.height - bpx - ((log.weight - minWeight) / weightRange) * drawH
+                                    val cy = size.height - bpx - (log.weight / weightRange) * drawH
                                     if (hypot(offset.x - cx, offset.y - cy) < 40f) found = i
                                 }
                                 selectedIndex = if (found == -1 || found == selectedIndex) null else found
@@ -264,7 +263,7 @@ private fun LineChart(
                     val drawH = size.height - paddingTopDp.toPx() - bpx
 
                     fun cx(i: Int) = spx + i * ppx
-                    fun cy(w: Float) = size.height - bpx - ((w - minWeight) / weightRange) * drawH
+                    fun cy(w: Float) = size.height - bpx - (w / weightRange) * drawH
 
                     // Horizontal gridlines
                     ticks.forEach { tick ->
@@ -328,7 +327,7 @@ private fun LineChart(
                 selectedIndex?.let { idx ->
                     val log = weightLogs[idx]
                     val drawH: Dp = chartHeightDp - paddingTopDp - paddingBottomDp
-                    val normalizedY = (log.weight - minWeight) / weightRange
+                    val normalizedY = log.weight / weightRange
                     val pointYDp: Dp = chartHeightDp - paddingBottomDp - drawH * normalizedY
                     val tooltipYDp: Dp = (pointYDp - 72.dp).coerceAtLeast(4.dp)
                     val tooltipXDp: Dp = (paddingStartDp + pointSpacingDp * idx - 56.dp).coerceAtLeast(4.dp)
