@@ -194,8 +194,7 @@ private fun LineChart(
     val paddingEndDp = 16.dp
 
     val maxWeight = weightLogs.maxOf { it.weight }
-    val weightRange = maxWeight.coerceAtLeast(0.1f)
-    val ticks = remember(maxWeight) { computeYTicks(0f, maxWeight) }
+    val (yMax, ticks) = remember(maxWeight) { computeYAxis(maxWeight) }
 
     BoxWithConstraints(modifier = modifier.height(chartHeightDp)) {
         val chartAreaWidth: Dp = maxWidth - yAxisWidthDp
@@ -215,7 +214,7 @@ private fun LineChart(
                 val drawH = size.height - paddingTopDp.toPx() - bpx
 
                 ticks.forEach { tick ->
-                    val y = size.height - bpx - (tick / weightRange) * drawH
+                    val y = size.height - bpx - (tick / yMax) * drawH
                     val label = "${tick.format1d()} kg"
                     val measured: TextLayoutResult = textMeasurer.measure(label, yLabelStyle)
                     val tx = size.width - measured.size.width - 6.dp.toPx()
@@ -240,7 +239,7 @@ private fun LineChart(
                     modifier = Modifier
                         .width(canvasWidth)
                         .height(chartHeightDp)
-                        .pointerInput(weightLogs, weightRange) {
+                        .pointerInput(weightLogs, yMax) {
                             detectTapGestures { offset ->
                                 val ppx = pointSpacingDp.toPx()
                                 val spx = paddingStartDp.toPx()
@@ -250,7 +249,7 @@ private fun LineChart(
                                 var found = -1
                                 weightLogs.forEachIndexed { i, log ->
                                     val cx = spx + i * ppx
-                                    val cy = size.height - bpx - (log.weight / weightRange) * drawH
+                                    val cy = size.height - bpx - (log.weight / yMax) * drawH
                                     if (hypot(offset.x - cx, offset.y - cy) < 40f) found = i
                                 }
                                 selectedIndex = if (found == -1 || found == selectedIndex) null else found
@@ -263,7 +262,7 @@ private fun LineChart(
                     val drawH = size.height - paddingTopDp.toPx() - bpx
 
                     fun cx(i: Int) = spx + i * ppx
-                    fun cy(w: Float) = size.height - bpx - (w / weightRange) * drawH
+                    fun cy(w: Float) = size.height - bpx - (w / yMax) * drawH
 
                     // Horizontal gridlines
                     ticks.forEach { tick ->
@@ -327,7 +326,7 @@ private fun LineChart(
                 selectedIndex?.let { idx ->
                     val log = weightLogs[idx]
                     val drawH: Dp = chartHeightDp - paddingTopDp - paddingBottomDp
-                    val normalizedY = log.weight / weightRange
+                    val normalizedY = log.weight / yMax
                     val pointYDp: Dp = chartHeightDp - paddingBottomDp - drawH * normalizedY
                     val tooltipYDp: Dp = (pointYDp - 72.dp).coerceAtLeast(4.dp)
                     val tooltipXDp: Dp = (paddingStartDp + pointSpacingDp * idx - 56.dp).coerceAtLeast(4.dp)
@@ -361,19 +360,21 @@ private fun LineChart(
     }
 }
 
-private fun computeYTicks(min: Float, max: Float, count: Int = 4): List<Float> {
-    val range = (max - min).coerceAtLeast(0.1f)
+// Returns (yMax, ticks) where yMax is always strictly above max and ticks always start at 0.
+// yMax = (floor(max/step) + 1) * step guarantees one full nice-step of headroom above the data.
+private fun computeYAxis(max: Float, count: Int = 4): Pair<Float, List<Float>> {
+    val range = max.coerceAtLeast(0.1f)
     val roughStep = range / count
     val niceSteps = listOf(0.5f, 1f, 2f, 2.5f, 5f, 10f, 25f, 50f, 100f, 250f, 500f)
     val step = niceSteps.firstOrNull { it >= roughStep } ?: roughStep
-    val start = (floor((min / step).toDouble()) * step).toFloat()
+    val yMax = (floor((max / step).toDouble()).toFloat() + 1f) * step
     val ticks = mutableListOf<Float>()
-    var tick = start
-    while (tick <= max + step * 0.01f) {
-        if (tick >= min - step * 0.01f) ticks.add(tick)
+    var tick = 0f
+    while (tick <= yMax + step * 0.001f) {
+        ticks.add(tick)
         tick += step
     }
-    return ticks
+    return Pair(yMax, ticks)
 }
 
 
