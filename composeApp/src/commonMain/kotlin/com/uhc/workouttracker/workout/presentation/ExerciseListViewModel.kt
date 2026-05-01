@@ -48,8 +48,8 @@ class ExerciseListViewModel(
     fun fetchExercises() {
         viewModelScope.launch {
             _error.value = null
+            runCatching { authRepository.refreshSession() }
             runCatching {
-                authRepository.refreshSession()
                 exerciseRepository.getExercisesGroupedByMuscle()
             }.onFailure {
                 if (_exercisesGroupedByMuscle.value.isEmpty()) {
