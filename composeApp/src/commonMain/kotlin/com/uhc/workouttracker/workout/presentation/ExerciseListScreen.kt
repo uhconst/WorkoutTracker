@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,6 +41,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -81,11 +83,9 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
     val muscles by viewModel.muscles.collectAsState()
     val selectedMuscleIds by viewModel.selectedMuscleIds.collectAsState()
     val progressions by viewModel.progressions.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(Unit) {
-        viewModel.fetchExercises()
-    }
 
     LaunchedEffect(Unit) {
         viewModel.error.collect { message ->
@@ -98,6 +98,9 @@ fun ExerciseListScreen(drawerState: DrawerState? = null) {
         muscles = muscles,
         selectedMuscleIds = selectedMuscleIds,
         progressions = progressions,
+        isLoading = isLoading,
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
         onMuscleSelected = viewModel::selectMuscleFilter,
         drawerState = drawerState,
         navController = navController,
@@ -112,6 +115,9 @@ internal fun ExerciseListLayout(
     muscles: List<MuscleGroup> = emptyList(),
     selectedMuscleIds: Set<Long> = emptySet(),
     progressions: Map<Long, ProgressionReadiness> = emptyMap(),
+    isLoading: Boolean = false,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     onMuscleSelected: (Long?) -> Unit = {},
     drawerState: DrawerState? = null,
     navController: NavController? = null,
@@ -125,11 +131,16 @@ internal fun ExerciseListLayout(
         drawerState = drawerState,
         snackbarHostState = snackbarHostState
     ) { innerPadding ->
-        Column(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = Theme.dimensions.spacing.medium),
                 horizontalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.small),
@@ -175,7 +186,11 @@ internal fun ExerciseListLayout(
                 }
             }
 
-            LazyColumn(
+            if (isLoading && exercisesGroupedByMuscle.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else LazyColumn(
                 contentPadding = PaddingValues(Theme.dimensions.spacing.medium),
                 verticalArrangement = Arrangement.spacedBy(Theme.dimensions.spacing.small),
                 modifier = Modifier.fillMaxSize()
@@ -264,6 +279,7 @@ internal fun ExerciseListLayout(
                         }
                     }
                 }
+            }
             }
         }
     }

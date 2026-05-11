@@ -41,6 +41,12 @@ class ExerciseListViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     val filteredExercises: StateFlow<List<MuscleWithExercises>> = combine(
         _selectedMuscleIds,
         _exercisesGroupedByMuscle
@@ -52,8 +58,13 @@ class ExerciseListViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    init {
+        fetchExercises()
+    }
+
     fun fetchExercises() {
         viewModelScope.launch {
+            _isLoading.value = true
             _error.value = null
             runCatching { authRepository.refreshSession() }
             runCatching {
@@ -62,6 +73,26 @@ class ExerciseListViewModel(
                 if (_exercisesGroupedByMuscle.value.isEmpty()) {
                     _error.value = "Failed to load exercises. Please try again."
                 }
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                _error.value = null
+                runCatching { authRepository.refreshSession() }
+                runCatching {
+                    exerciseRepository.getExercisesGroupedByMuscle()
+                }.onFailure {
+                    if (_exercisesGroupedByMuscle.value.isEmpty()) {
+                        _error.value = "Failed to load exercises. Please try again."
+                    }
+                }
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }
