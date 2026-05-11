@@ -34,6 +34,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -146,7 +147,11 @@ internal fun ExerciseListLayout(
                         modifier = Modifier.graphicsLayer { scaleX = allScale; scaleY = allScale },
                         selected = selectedMuscleIds.isEmpty(),
                         onClick = { haptic.perform(HapticType.Selection); onMuscleSelected(null) },
-                        label = { Text("All") }
+                        label = { Text("All") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
                 }
 
@@ -161,7 +166,11 @@ internal fun ExerciseListLayout(
                         modifier = Modifier.graphicsLayer { scaleX = chipScale; scaleY = chipScale },
                         selected = isSelected,
                         onClick = { haptic.perform(HapticType.Selection); onMuscleSelected(muscle.id) },
-                        label = { Text(muscle.name) }
+                        label = { Text(muscle.name) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
                 }
             }
@@ -307,7 +316,8 @@ private fun ExerciseItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = exercise.name,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 exercise.weightLogs.lastOrNull()?.let { lastLog ->
                     Text(
