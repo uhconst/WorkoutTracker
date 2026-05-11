@@ -38,6 +38,9 @@ class ExerciseListViewModel(
     private val _selectedMuscleIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedMuscleIds = _selectedMuscleIds.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
@@ -62,6 +65,25 @@ class ExerciseListViewModel(
                 if (_exercisesGroupedByMuscle.value.isEmpty()) {
                     _error.value = "Failed to load exercises. Please try again."
                 }
+            }
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                _error.value = null
+                runCatching { authRepository.refreshSession() }
+                runCatching {
+                    exerciseRepository.getExercisesGroupedByMuscle()
+                }.onFailure {
+                    if (_exercisesGroupedByMuscle.value.isEmpty()) {
+                        _error.value = "Failed to load exercises. Please try again."
+                    }
+                }
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }

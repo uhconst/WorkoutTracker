@@ -8,6 +8,7 @@ import com.uhc.workouttracker.workout.domain.model.ProgressionReadiness
 import com.uhc.workouttracker.workout.domain.model.WeightLog
 import com.uhc.workouttracker.workout.domain.repository.ExerciseProgressionRepository
 import com.uhc.workouttracker.workout.domain.repository.ExerciseRepository
+import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
@@ -22,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -176,5 +178,50 @@ class ExerciseListViewModelTest {
     fun `progressions reflects data from observeAll flow`() = runTest {
         progressionsFlow.value = mapOf(1L to ProgressionReadiness.INCREASE_WEIGHT)
         assertEquals(mapOf(1L to ProgressionReadiness.INCREASE_WEIGHT), vm.progressions.value)
+    }
+
+    @Test
+    fun `isRefreshing initial is false`() {
+        assertFalse(vm.isRefreshing.value)
+    }
+
+    @Test
+    fun `refresh success - isRefreshing resets to false`() = runTest {
+        vm.refresh()
+        assertFalse(vm.isRefreshing.value)
+    }
+
+    @Test
+    fun `refresh failure - isRefreshing still resets to false`() = runTest {
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("network error")
+        vm.refresh()
+        assertFalse(vm.isRefreshing.value)
+    }
+
+    @Test
+    fun `refresh - isRefreshing transitions true then false`() = runTest {
+        vm.isRefreshing.test {
+            assertEquals(false, awaitItem()) // initial
+            vm.refresh()
+            assertEquals(true, awaitItem())  // during refresh
+            assertEquals(false, awaitItem()) // after refresh
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `refresh failure with empty cache - error is set`() = runTest {
+        exercisesFlow.value = emptyList()
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("offline")
+        vm.refresh()
+        assertNotNull(vm.error.value)
+    }
+
+    @Test
+    fun `refresh failure with non-empty cache - error is null`() = runTest {
+        exercisesFlow.value = listOf(bicepsGroup)
+        coEvery { exerciseRepo.getExercisesGroupedByMuscle() } throws RuntimeException("offline")
+        vm.refresh()
+        assertNull(vm.error.value)
     }
 }
