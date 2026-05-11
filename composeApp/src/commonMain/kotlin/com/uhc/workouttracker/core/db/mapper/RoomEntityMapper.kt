@@ -21,7 +21,7 @@ fun ExerciseWithWeightLogs.toDomain(): Exercise = Exercise(
     name = exercise.name,
     description = exercise.description,
     muscleGroupId = exercise.muscleGroupId,
-    weightLogs = weightLogs.map { it.toDomain() }
+    weightLogs = weightLogs.sortedBy { it.date }.map { it.toDomain() }
 )
 
 fun MuscleGroupWithExercises.toDomain(): MuscleWithExercises = MuscleWithExercises(

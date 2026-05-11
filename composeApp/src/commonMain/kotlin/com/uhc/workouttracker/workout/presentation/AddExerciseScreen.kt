@@ -163,7 +163,7 @@ fun AddExerciseLayout(
     }
     var weight by remember(exercise, saveKey) {
         mutableStateOf(
-            exercise?.weightLogs?.firstOrNull()?.weight?.format2d() ?: ""
+            exercise?.weightLogs?.lastOrNull()?.weight?.format2d() ?: ""
         )
     }
     var expanded by remember { mutableStateOf(false) }
